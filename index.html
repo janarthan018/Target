@@ -67,7 +67,7 @@
         <span class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-extrabold text-xs">CBT</span>
         <div>
           <span class="font-extrabold text-sm sm:text-base tracking-tight block leading-none">ExamPrep CBT Pro</span>
-          <span class="text-[10px] text-slate-400">Subject & Chapter Mock Studio</span>
+          <span class="text-[10px] text-slate-400">Universal Parser • Subject & Chapter Studio</span>
         </div>
       </button>
 
@@ -134,10 +134,13 @@
     <section class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div>
-          <h2 class="text-sm sm:text-base font-extrabold text-slate-900">3. Upload Question Paper</h2>
-          <p class="text-[11px] text-slate-500">Target: <strong id="uploadTargetLabel" class="text-slate-800">English → All Chapters</strong></p>
+          <h2 class="text-sm sm:text-base font-extrabold text-slate-900">3. Upload Question Paper (Any Format)</h2>
+          <p class="text-[11px] text-slate-500">Target: <strong id="uploadTargetLabel" class="text-slate-800">English → General / Mixed</strong></p>
         </div>
         <div class="flex items-center gap-1.5 flex-wrap">
+          <button type="button" onclick="openPasteModal()" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs">
+            Paste Text
+          </button>
           <button type="button" onclick="downloadSamplePdf()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs">
             Sample PDF
           </button>
@@ -145,7 +148,7 @@
             Sample TXT
           </button>
           <button type="button" onclick="loadSubjectDemoTest()" class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs">
-            Load Subject Demo
+            Subject Demo
           </button>
         </div>
       </div>
@@ -153,19 +156,43 @@
       <!-- File Picker -->
       <div id="dropZoneBox" onclick="document.getElementById('pdfFileInput').click()" class="border-2 border-dashed border-blue-300 bg-blue-50/60 hover:bg-blue-50 rounded-xl p-4 text-center cursor-pointer transition mb-3">
         <p class="text-sm font-bold text-blue-900" id="uploadDropLabel">Tap to Select PDF or TXT File</p>
-        <p class="text-[11px] text-blue-700 mt-0.5" id="uploadSubLabel">Supports (A) (B) (C) (D) or A. B. C. D. formats + Answer Key</p>
-        <input type="file" id="pdfFileInput" accept="application/pdf,.pdf,text/plain,.txt" class="hidden" onchange="handleFileSelected(event)" />
+        <p class="text-[11px] text-blue-700 mt-0.5" id="uploadSubLabel">Supports (A)-(D), A.-D., (a)-(d), (1)-(4), multi-line options & Answer Keys</p>
+        <input type="file" id="pdfFileInput" accept=".pdf,.txt,.csv,.md,application/pdf,text/plain" class="hidden" onchange="handleFileSelected(event)" />
       </div>
 
-      <!-- Loaded Draft Preview Strip (Shown only when a new file is parsed) -->
+      <!-- Parse Error / Diagnostics Helper (Shown if PDF is scanned image or unformatted) -->
+      <div id="parseErrorBox" class="hidden mb-3 p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-900 space-y-2">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <strong id="parseErrorTitle" class="block font-extrabold">Could not auto-detect MCQs from this file</strong>
+            <span id="parseErrorDetail" class="text-[11px] text-red-700 block mt-0.5"></span>
+          </div>
+          <button type="button" onclick="document.getElementById('parseErrorBox').classList.add('hidden')" class="px-2 py-0.5 rounded bg-white border border-red-200 text-[11px] font-bold">✕</button>
+        </div>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button type="button" onclick="openRawTextInspector()" class="px-3 py-1 rounded-lg bg-white border border-red-300 text-red-800 font-bold text-[11px]">
+            Inspect & Fix Extracted Text
+          </button>
+          <button type="button" onclick="openPasteModal()" class="px-3 py-1 rounded-lg bg-red-600 text-white font-bold text-[11px]">
+            Paste Questions Manually
+          </button>
+        </div>
+      </div>
+
+      <!-- Loaded Draft Preview Strip -->
       <div id="draftStatusStrip" class="hidden mb-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-2">
         <div class="text-xs text-emerald-950">
           <strong id="draftReadyTitle">File Parsed Successfully</strong>
           <span id="draftReadyCount" class="ml-1.5 px-2 py-0.5 rounded bg-emerald-200/80 font-bold text-[11px]"></span>
         </div>
-        <button type="button" onclick="clearDraftUpload()" class="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 text-emerald-900 font-bold text-[11px]">
-          Clear File
-        </button>
+        <div class="flex items-center gap-1.5">
+          <button type="button" onclick="openPreviewDraftModal()" class="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 text-emerald-900 font-bold text-[11px]">
+            Preview Qs
+          </button>
+          <button type="button" onclick="clearDraftUpload()" class="px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-700 font-bold text-[11px]">
+            Clear
+          </button>
+        </div>
       </div>
 
       <!-- Test Config Row -->
@@ -274,7 +301,7 @@
       </div>
     </div>
 
-    <!-- Dynamic Section / Part Tabs (Auto-generated if test has multiple sections/parts) -->
+    <!-- Dynamic Section / Part Tabs -->
     <div id="examSectionTabs" class="flex items-center gap-2 overflow-x-auto no-scrollbar mb-3"></div>
 
     <!-- Question & Options Card -->
@@ -305,7 +332,7 @@
   <!-- ==================== VIEW 4: SUBJECT & CHAPTER ANALYTICS ==================== -->
   <section id="view-analytics" class="hidden max-w-5xl w-full mx-auto px-4 py-5 space-y-4 flex-1">
 
-    <!-- Analytics Mode Toggle (Current Test Report vs Subject & Chapter Mastery) -->
+    <!-- Analytics Mode Toggle -->
     <div class="grid grid-cols-2 gap-2 bg-slate-200/70 p-1 rounded-2xl">
       <button type="button" id="anaModeTestBtn" onclick="switchAnalyticsMode('test')" class="tap-btn rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-900 shadow-sm">
         Current Test Scorecard
@@ -423,6 +450,38 @@
     </div>
   </div>
 
+  <!-- Paste / Raw Text Inspector Modal -->
+  <div id="pasteModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-xl max-h-[88vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-sm sm:text-base font-extrabold text-slate-900" id="pasteModalTitle">Paste or Edit Question Text</h3>
+          <p class="text-[11px] text-slate-500">Supports 1. Question (A) Opt1 (B) Opt2 (C) Opt3 (D) Opt4 or multi-line options</p>
+        </div>
+        <button type="button" onclick="document.getElementById('pasteModal').classList.add('hidden')" class="px-3 py-1 rounded-lg bg-slate-100 text-xs font-bold">Close</button>
+      </div>
+      <textarea id="pasteRawTextarea" rows="11" placeholder="Paste your questions and answer key here..." class="w-full p-3 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:border-blue-500 flex-1"></textarea>
+      <div class="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-slate-100">
+        <span class="text-[11px] text-slate-500" id="pasteLiveCount">Ready to parse</span>
+        <div class="flex gap-2">
+          <button type="button" onclick="document.getElementById('pasteModal').classList.add('hidden')" class="tap-btn px-4 rounded-xl border border-slate-300 text-xs font-bold">Cancel</button>
+          <button type="button" onclick="parseFromPasteModal()" class="tap-btn px-5 rounded-xl bg-blue-600 text-white text-xs font-extrabold">Parse Questions</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Draft Questions Preview Modal -->
+  <div id="previewModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-xl max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100">
+        <h3 class="text-sm sm:text-base font-extrabold text-slate-900" id="previewModalTitle">Parsed Questions Preview</h3>
+        <button type="button" onclick="document.getElementById('previewModal').classList.add('hidden')" class="px-3 py-1 rounded-lg bg-slate-100 text-xs font-bold">Close</button>
+      </div>
+      <div id="previewModalList" class="space-y-2.5 overflow-y-auto flex-1 pr-1 text-xs"></div>
+    </div>
+  </div>
+
   <script>
     // ==================== 1. PWA MANIFEST & SERVICE WORKER ====================
     (function setupPwa() {
@@ -450,7 +509,7 @@
 
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
         const sw = `
-          const CACHE = 'examprep-cbt-pro-v1';
+          const CACHE = 'examprep-cbt-pro-v2';
           self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./']).catch(() => {}))); });
           self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
           self.addEventListener('fetch', e => {
@@ -483,8 +542,8 @@
     }
 
     // ==================== 2. SUBJECTS, DYNAMIC CHAPTERS & STORAGE ====================
-    const STORE_TESTS_KEY = 'examprep_cbt_tests_v5';
-    const STORE_CHAPTERS_KEY = 'examprep_cbt_chapters_v5';
+    const STORE_TESTS_KEY = 'examprep_cbt_tests_v6';
+    const STORE_CHAPTERS_KEY = 'examprep_cbt_chapters_v6';
 
     const SUBJECTS = ['English', 'Maths', 'Reasoning', 'General Studies'];
 
@@ -533,7 +592,7 @@
     let selectedSubject = 'English';
     let selectedChapter = 'General / Mixed';
     let draftQuestions = [];
-    let draftFileName = '';
+    let lastExtractedRawText = '';
     let activeTest = null;
     let examInProgress = false;
     let currentIdx = 0;
@@ -596,7 +655,6 @@
 
     // ==================== 3. SUBJECT & DYNAMIC CHAPTER UI ====================
     function renderSubjectAndChapterUI() {
-      // Render Subject Tabs
       document.getElementById('subjectTabsBar').innerHTML = SUBJECTS.map(subj => {
         const active = subj === selectedSubject;
         return `
@@ -619,7 +677,6 @@
         selectedChapter = chapters[0];
       }
 
-      // Render Chapter Chips with Delete Option for Custom Chapters
       document.getElementById('chapterChipsWrap').innerHTML = chapters.map(ch => {
         const active = ch === selectedChapter;
         const isDefault = (DEFAULT_CHAPTERS[selectedSubject] || []).includes(ch);
@@ -635,7 +692,6 @@
         `;
       }).join('');
 
-      // Sync Config Dropdown
       const sel = document.getElementById('cfgChapterSelect');
       sel.innerHTML = chapters.map(ch => `<option value="${escAttr(ch)}" ${ch === selectedChapter ? 'selected' : ''}>${esc(ch)}</option>`).join('');
       sel.onchange = () => {
@@ -785,7 +841,6 @@
         `Chapter: ${selectedChapter}`,
         `Date: ${todayISO()}`,
         '',
-        'Section: Practice Questions',
         '1. Identify the correct option for the first sample question.',
         '(A) First Option  (B) Second Option  (C) Third Option  (D) Fourth Option',
         '',
@@ -844,14 +899,15 @@
       toast('Downloaded Sample PDF format');
     }
 
-    // ==================== 6. ROBUST FILE UPLOAD & PARSER (FIXES STALE PAPER BUG) ====================
+    // ==================== 6. UNIVERSAL MULTI-FORMAT QUESTION PARSER ====================
     function clearDraftUpload() {
       draftQuestions = [];
-      draftFileName = '';
+      lastExtractedRawText = '';
       const inp = document.getElementById('pdfFileInput');
       if (inp) inp.value = '';
       document.getElementById('uploadDropLabel').textContent = 'Tap to Select PDF or TXT File';
       document.getElementById('draftStatusStrip').classList.add('hidden');
+      document.getElementById('parseErrorBox').classList.add('hidden');
     }
 
     async function handleFileSelected(e) {
@@ -859,41 +915,48 @@
       const file = inputEl.files && inputEl.files[0];
       if (!file) return;
 
-      // Immediately clear previous draft state so old question paper NEVER leaks into new upload
       draftQuestions = [];
-      draftFileName = file.name;
+      lastExtractedRawText = '';
       document.getElementById('draftStatusStrip').classList.add('hidden');
-      document.getElementById('uploadDropLabel').textContent = `Reading new file: ${file.name}...`;
+      document.getElementById('parseErrorBox').classList.add('hidden');
+      document.getElementById('uploadDropLabel').textContent = `Reading: ${file.name}...`;
 
       try {
         let fullText = '';
-        if (file.name.toLowerCase().endsWith('.txt') || file.type === 'text/plain') {
+        const lowerName = file.name.toLowerCase();
+
+        if (lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.csv') || file.type === 'text/plain') {
           fullText = await file.text();
         } else {
-          if (!window.pdfjsLib) throw new Error('PDF reader library still loading. Try again.');
+          if (!window.pdfjsLib) throw new Error('PDF reader library is still loading. Wait 2 seconds and retry.');
           const buf = await file.arrayBuffer();
-          // Disable worker cache reuse by passing fresh Uint8Array copy
           const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buf) });
           const pdf = await loadingTask.promise;
 
           for (let p = 1; p <= pdf.numPages; p++) {
             const page = await pdf.getPage(p);
             const tc = await page.getTextContent();
+            // Sort items top-to-bottom, left-to-right for multi-column/scrambled PDFs
+            const items = tc.items.map(it => ({
+              str: it.str,
+              x: it.transform ? it.transform[4] : 0,
+              y: it.transform ? it.transform[5] : 0
+            }));
             let lastY = null;
             const out = [];
-            tc.items.forEach(it => {
-              const y = it.transform ? it.transform[5] : null;
-              if (lastY !== null && y !== null && Math.abs(y - lastY) > 4.5) out.push('\n');
+            items.forEach(it => {
+              if (lastY !== null && Math.abs(it.y - lastY) > 4.5) out.push('\n');
               out.push(it.str);
-              if (y !== null) lastY = y;
+              lastY = it.y;
             });
             fullText += out.join(' ') + '\n';
           }
           await pdf.destroy();
         }
 
-        // Always update Title to reflect the newly uploaded file
-        const cleanTitle = file.name.replace(/\.(pdf|txt)$/i, '').replace(/[_-]+/g, ' ').trim();
+        lastExtractedRawText = fullText;
+
+        const cleanTitle = file.name.replace(/\.(pdf|txt|md|csv)$/i, '').replace(/[_-]+/g, ' ').trim();
         document.getElementById('cfgTitle').value = cleanTitle;
 
         const dateMatch = fullText.match(/\b(\d{4}-\d{2}-\d{2}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4})\b/i);
@@ -904,74 +967,222 @@
           }
         }
 
-        const parsed = parseExamPdfText(fullText);
+        const parsed = universalParseQuestions(fullText);
         if (parsed.length > 0) {
           draftQuestions = parsed;
           document.getElementById('uploadDropLabel').textContent = `Loaded: ${file.name} (${parsed.length} Qs)`;
           document.getElementById('draftReadyTitle').textContent = file.name;
           document.getElementById('draftReadyCount').textContent = `${parsed.length} Questions Ready`;
           document.getElementById('draftStatusStrip').classList.remove('hidden');
-          toast(`Parsed ${parsed.length} new questions from ${file.name}`);
+          toast(`Parsed ${parsed.length} questions from ${file.name}`);
         } else {
           draftQuestions = [];
-          document.getElementById('uploadDropLabel').textContent = `No MCQs found in ${file.name} — check format`;
-          toast('No numbered MCQs detected in uploaded file');
+          document.getElementById('uploadDropLabel').textContent = `Tap to Select PDF or TXT File`;
+          const strippedLen = fullText.replace(/\s+/g, '').length;
+          document.getElementById('parseErrorTitle').textContent = strippedLen < 30
+            ? `Scanned / Image-Only PDF Detected (${file.name})`
+            : `Format Not Recognized in "${file.name}"`;
+          document.getElementById('parseErrorDetail').textContent = strippedLen < 30
+            ? 'This PDF contains scanned images without selectable text. Copy the text using OCR/Google Lens and tap "Paste Questions Manually".'
+            : `Extracted ${strippedLen} characters, but options (A)-(D) or (1)-(4) did not match standard numbering. Tap "Inspect & Fix Extracted Text" to view.`;
+          document.getElementById('parseErrorBox').classList.remove('hidden');
         }
       } catch (err) {
         draftQuestions = [];
         document.getElementById('uploadDropLabel').textContent = 'Tap to Select PDF or TXT File';
-        toast('Error reading file: ' + err.message);
+        document.getElementById('parseErrorTitle').textContent = 'File Read Error';
+        document.getElementById('parseErrorDetail').textContent = err.message;
+        document.getElementById('parseErrorBox').classList.remove('hidden');
       } finally {
-        // Reset input value so selecting the same or another file always fires onchange cleanly
         inputEl.value = '';
       }
     }
 
-    function parseExamPdfText(text) {
-      const clean = text.replace(/\r\n/g, '\n').replace(/[ \t]+/g, ' ').replace(/\n\s+/g, '\n');
-      const parts = clean.split(/Answer\s*Key/i);
-      const qBody = parts[0] || clean;
-      const ansBody = parts.slice(1).join('\n');
+    /**
+     * Universal MCQ Parser:
+     * Handles:
+     *  - Question numbers: "1.", "1)", "Q1.", "Q.1", "Question 1:", "(1)"
+     *  - Option styles: "(A) (B) (C) (D)", "A. B. C. D.", "A) B) C) D)", "(a) (b) (c) (d)", "(1) (2) (3) (4)"
+     *  - Single-line or multi-line options
+     *  - Answer Keys at bottom: "1 (B)", "1. B", "1 - B", "Q1: (B)", "1. (2)"
+     */
+    function universalParseQuestions(rawText) {
+      if (!rawText || !rawText.trim()) return [];
+      const text = rawText
+        .replace(/\r\n/g, '\n')
+        .replace(/\u00A0/g, ' ')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\n\s+/g, '\n');
 
+      // Split Answer Key section if present
+      const keySplit = text.split(/\n\s*(?:Answer\s*Key|Answers|Solutions|Correct\s*Answers)\b[^\n]*/i);
+      const qBody = keySplit[0] || text;
+      const ansBody = keySplit.slice(1).join('\n');
+
+      // Parse Answer Key
       const ansMap = {};
-      const ansRe = /(?:Q\s*)?(\d{1,3})\s*[\.\:\-\)]?\s*\(?([A-D])\)?/gi;
-      let am;
-      while ((am = ansRe.exec(ansBody)) !== null) {
-        ansMap[parseInt(am[1], 10)] = am[2].toUpperCase();
+      const scMap = {};
+      const numToLet = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
+
+      if (ansBody.trim()) {
+        const ansLines = ansBody.split('\n');
+        ansLines.forEach(line => {
+          // Match multiple answers on one line e.g. "1 (B)  2 (C)  3 (A)" or single line "1. (B) Explanation..."
+          const pairRe = /(?:Q\.?\s*)?(\d{1,3})\s*[\.\:\-\)]?\s*\(?([A-Da-d1-4])\)?(?:\s+([^\d\n][^\n]*))?/g;
+          let m;
+          while ((m = pairRe.exec(line)) !== null) {
+            const qNum = parseInt(m[1], 10);
+            let rawAns = m[2].toUpperCase();
+            if (numToLet[rawAns]) rawAns = numToLet[rawAns];
+            if (!ansMap[qNum]) ansMap[qNum] = rawAns;
+            if (m[3] && m[3].trim().length > 2 && !scMap[qNum]) {
+              scMap[qNum] = m[3].trim();
+            }
+          }
+        });
       }
 
-      const scMap = {};
-      const scRe = /(?:Q\s*)?(\d{1,3})\s*\(?[A-D]\)?[^\n]*?\s+([^\n]+)/gi;
-      let sm;
-      while ((sm = scRe.exec(ansBody)) !== null) {
-        const n = parseInt(sm[1], 10);
-        if (sm[2] && sm[2].trim().length > 3) scMap[n] = sm[2].trim();
+      // Split into Question Blocks
+      const qHeaderRe = /(?:^|\n)\s*(?:Question\s+|Q\.?\s*)?(\d{1,3})\s*[\.\)\:]\s+/gi;
+      const matches = [];
+      let qm;
+      while ((qm = qHeaderRe.exec(qBody)) !== null) {
+        matches.push({
+          num: parseInt(qm[1], 10),
+          start: qm.index,
+          contentStart: qm.index + qm[0].length
+        });
       }
 
       const list = [];
-      const qRe = /(?:^|\n)\s*(?:Q\s*)?(\d{1,3})[\.\)]\s+([\s\S]*?)(?=(?:\n\s*(?:Q\s*)?\d{1,3}[\.\)]\s+)|$)/g;
-      let qm;
-      while ((qm = qRe.exec(qBody)) !== null) {
-        const num = parseInt(qm[1], 10);
-        const block = qm[2].trim();
-        // Support both (A) ... (B) ... and A. ... B. ... formats
-        let optM = block.match(/\(A\)\s*([\s\S]*?)\s*\(B\)\s*([\s\S]*?)\s*\(C\)\s*([\s\S]*?)\s*\(D\)\s*([\s\S]*?)(?=\n|$)/i);
-        if (!optM) {
-          optM = block.match(/(?:^|\n|\s)A[\.\)]\s*([\s\S]*?)\s+B[\.\)]\s*([\s\S]*?)\s+C[\.\)]\s*([\s\S]*?)\s+D[\.\)]\s*([\s\S]*?)(?=\n|$)/i);
-        }
-        if (optM) {
-          const stem = block.slice(0, optM.index).trim();
+      for (let idx = 0; idx < matches.length; idx++) {
+        const cur = matches[idx];
+        const nextStart = idx + 1 < matches.length ? matches[idx + 1].start : qBody.length;
+        const block = qBody.slice(cur.contentStart, nextStart).trim();
+
+        const parsedBlock = extractStemAndOptions(block);
+        if (parsedBlock) {
           list.push({
-            num,
-            section: num <= 25 ? 'Section A' : 'Section B',
-            question: stem,
-            options: { A: optM[1].trim(), B: optM[2].trim(), C: optM[3].trim(), D: optM[4].trim() },
-            answer: ansMap[num] || 'A',
-            shortcut: scMap[num] || ''
+            num: cur.num,
+            section: cur.num <= 25 ? 'Section A' : 'Section B',
+            question: parsedBlock.stem,
+            options: parsedBlock.options,
+            answer: parsedBlock.inlineAnswer || ansMap[cur.num] || 'A',
+            shortcut: parsedBlock.inlineExplanation || scMap[cur.num] || ''
           });
         }
       }
+
       return list;
+    }
+
+    function extractStemAndOptions(block) {
+      // Check for inline answer/explanation inside question block (e.g., "Ans: B" or "Answer: (C)")
+      let inlineAnswer = null;
+      let inlineExplanation = '';
+      let cleanBlock = block;
+
+      const ansInlineRe = /\n?\s*(?:Ans(?:wer)?|Correct)\s*[\:\-\.]?\s*\(?([A-Da-d1-4])\)?(?:\s*[\-\:\.]?\s*([\s\S]*))?$/i;
+      const ansMatch = cleanBlock.match(ansInlineRe);
+      if (ansMatch) {
+        const numToLet = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
+        let a = ansMatch[1].toUpperCase();
+        inlineAnswer = numToLet[a] || a;
+        if (ansMatch[2]) inlineExplanation = ansMatch[2].trim();
+        cleanBlock = cleanBlock.slice(0, ansMatch.index).trim();
+      }
+
+      // Pattern 1: (A) ... (B) ... (C) ... (D) ... (case-insensitive, supports multi-line)
+      let optM = cleanBlock.match(/(?:^|\s|\n)\(A\)\s*([\s\S]*?)\s*(?:\n|\s)\(B\)\s*([\s\S]*?)\s*(?:\n|\s)\(C\)\s*([\s\S]*?)\s*(?:\n|\s)\(D\)\s*([\s\S]*)$/i);
+
+      // Pattern 2: A. ... B. ... C. ... D. ... OR A) ... B) ... C) ... D) ...
+      if (!optM) {
+        optM = cleanBlock.match(/(?:^|\s|\n)A[\.\)]\s*([\s\S]*?)\s+(?:B[\.\)])\s*([\s\S]*?)\s+(?:C[\.\)])\s*([\s\S]*?)\s+(?:D[\.\)])\s*([\s\S]*)$/i);
+      }
+
+      // Pattern 3: Multi-line options starting at start of lines: A. / (A) / a)
+      if (!optM) {
+        optM = cleanBlock.match(/\n\s*\(?A\)?[\.\)]?\s+([\s\S]*?)\n\s*\(?B\)?[\.\)]?\s+([\s\S]*?)\n\s*\(?C\)?[\.\)]?\s+([\s\S]*?)\n\s*\(?D\)?[\.\)]?\s+([\s\S]*)$/i);
+      }
+
+      // Pattern 4: Numeric options (1) ... (2) ... (3) ... (4) ...
+      if (!optM) {
+        optM = cleanBlock.match(/(?:^|\s|\n)\(1\)\s*([\s\S]*?)\s*(?:\n|\s)\(2\)\s*([\s\S]*?)\s*(?:\n|\s)\(3\)\s*([\s\S]*?)\s*(?:\n|\s)\(4\)\s*([\s\S]*)$/i);
+      }
+
+      if (!optM) return null;
+
+      const stem = cleanBlock.slice(0, optM.index).trim();
+      if (!stem) return null;
+
+      return {
+        stem,
+        options: {
+          A: optM[1].replace(/\n+/g, ' ').trim(),
+          B: optM[2].replace(/\n+/g, ' ').trim(),
+          C: optM[3].replace(/\n+/g, ' ').trim(),
+          D: optM[4].replace(/\n+/g, ' ').trim()
+        },
+        inlineAnswer,
+        inlineExplanation
+      };
+    }
+
+    // Paste & Raw Text Inspector Handlers
+    function openPasteModal() {
+      document.getElementById('pasteModalTitle').textContent = `Paste Questions (${selectedSubject} → ${selectedChapter})`;
+      document.getElementById('pasteRawTextarea').value = lastExtractedRawText || '';
+      document.getElementById('pasteLiveCount').textContent = 'Ready to parse';
+      document.getElementById('pasteModal').classList.remove('hidden');
+    }
+
+    function openRawTextInspector() {
+      openPasteModal();
+    }
+
+    function parseFromPasteModal() {
+      const txt = document.getElementById('pasteRawTextarea').value;
+      if (!txt.trim()) {
+        toast('Paste some question text first');
+        return;
+      }
+      const parsed = universalParseQuestions(txt);
+      if (parsed.length === 0) {
+        document.getElementById('pasteLiveCount').textContent = '0 questions matched — ensure numbered Qs (1.) and options (A)-(D)';
+        toast('Could not detect MCQs. Check numbering & (A)-(D) options.');
+        return;
+      }
+
+      draftQuestions = parsed;
+      lastExtractedRawText = txt;
+      if (!document.getElementById('cfgTitle').value.trim()) {
+        document.getElementById('cfgTitle').value = `${selectedSubject} — ${selectedChapter} Set`;
+      }
+      document.getElementById('parseErrorBox').classList.add('hidden');
+      document.getElementById('uploadDropLabel').textContent = `Loaded from Text (${parsed.length} Qs)`;
+      document.getElementById('draftReadyTitle').textContent = 'Custom Text Input';
+      document.getElementById('draftReadyCount').textContent = `${parsed.length} Questions Ready`;
+      document.getElementById('draftStatusStrip').classList.remove('hidden');
+      document.getElementById('pasteModal').classList.add('hidden');
+      toast(`Successfully parsed ${parsed.length} questions!`);
+    }
+
+    function openPreviewDraftModal() {
+      if (!draftQuestions.length) return;
+      document.getElementById('previewModalTitle').textContent = `Preview (${draftQuestions.length} Questions)`;
+      document.getElementById('previewModalList').innerHTML = draftQuestions.map(q => `
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+          <div class="font-bold text-slate-900 mb-1">Q${q.num}. ${esc(q.question)}</div>
+          <div class="grid grid-cols-2 gap-1 text-[11px] text-slate-700">
+            <div>(A) ${esc(q.options.A)}</div>
+            <div>(B) ${esc(q.options.B)}</div>
+            <div>(C) ${esc(q.options.C)}</div>
+            <div>(D) ${esc(q.options.D)}</div>
+          </div>
+          <div class="mt-1 text-[11px] font-bold text-emerald-700">Answer: (${q.answer}) ${q.shortcut ? '• ' + esc(q.shortcut) : ''}</div>
+        </div>
+      `).join('');
+      document.getElementById('previewModal').classList.remove('hidden');
     }
 
     function loadSubjectDemoTest() {
@@ -994,7 +1205,7 @@
 
     function createAndLaunchFromForm() {
       if (draftQuestions.length === 0) {
-        toast('Upload a PDF/TXT file first, or tap "Load Subject Demo"');
+        toast('Upload a PDF/TXT file or Paste Text first');
         return;
       }
 
@@ -1018,7 +1229,6 @@
       all.unshift(test);
       saveTests(all);
 
-      // Clear draft and title immediately after saving so next upload starts 100% fresh
       clearDraftUpload();
       document.getElementById('cfgTitle').value = '';
       openSetupScreen(test.id);
@@ -1042,7 +1252,7 @@
       tests.sort((a, b) => b.id.localeCompare(a.id));
 
       if (tests.length === 0) {
-        wrap.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-500">No saved tests found for this filter. Upload a PDF/TXT or tap "Load Subject Demo" above.</div>`;
+        wrap.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-500">No saved tests found for this filter. Upload a PDF/TXT, Paste Text, or tap "Subject Demo" above.</div>`;
         return;
       }
 
@@ -1295,7 +1505,7 @@
       }, { passive: true });
     })();
 
-    // ==================== 9. SUBMISSION & DUAL ANALYTICS (TEST + SUBJECT/CHAPTER MASTERY) ====================
+    // ==================== 9. SUBMISSION & DUAL ANALYTICS ====================
     function openSubmitModal() {
       const ans = Object.keys(answersMap).length;
       document.getElementById('submitModalText').textContent = `Answered: ${ans} | Skipped: ${activeTest.questions.length - ans}`;
@@ -1400,7 +1610,6 @@
         <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200"><div class="text-sm sm:text-base font-extrabold text-amber-800">${avgSecPerQ}s</div><div class="text-[10px] font-bold text-amber-900">Avg / Q</div></div>
       `;
 
-      // Dynamic Section Breakdown
       const secs = getUniqueSections(activeTest.questions);
       document.getElementById('resSectionBreakdown').innerHTML = secs.map(sec => {
         const m = getSectionMetrics(sec);
@@ -1412,7 +1621,6 @@
         `;
       }).join('');
 
-      // Build Dynamic Filter Tabs
       const tabs = [
         { key: 'all', label: 'All' },
         ...secs.map(s => ({ key: 'sec:' + s, label: s })),
@@ -1518,7 +1726,7 @@
         subjStats[s] = { tests: 0, correct: 0, wrong: 0, skipped: 0, timeSec: 0 };
       });
 
-      const chapStats = {}; // key: "Subject||Chapter"
+      const chapStats = {};
 
       tests.forEach(t => {
         if (!t.attempts || t.attempts.length === 0) return;
