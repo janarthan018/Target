@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>ExamPrep CBT Pro — Multi-Subject & Chapter Mock Test Studio</title>
+
+  <!-- Dynamic PWA Manifest & Icon -->
+  <link id="pwaManifest" rel="manifest" />
+  <link id="pwaIcon" rel="apple-touch-icon" />
+
+  <!-- Tailwind CSS & Inter Font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- PDF.js & jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      padding-top: var(--safe-top);
+      padding-bottom: calc(78px + var(--safe-bottom));
+    }
+    .tap-btn {
+      min-height: 42px;
+      min-width: 42px;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Palette Colors */
+    .pal-not-visited { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .pal-not-answered { background: #ef4444; color: #fff; border: 1px solid #dc2626; }
+    .pal-answered { background: #16a34a; color: #fff; border: 1px solid #15803d; }
+    .pal-marked { background: #7c3aed; color: #fff; border: 1px solid #6d28d9; }
+    .pal-marked-answered { background: #7c3aed; color: #fff; border: 3px solid #16a34a; }
+    .pal-current { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0f172a; }
+
+    .btn-wa { background-color: #25D366; color: #052e16; }
+    .btn-wa:hover { background-color: #1ebe5d; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- ==================== TOP BAR ==================== -->
+  <header class="bg-slate-900 text-white sticky top-0 z-40 border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-2">
+      <button type="button" onclick="navigateApp('home')" class="flex items-center gap-2.5 text-left">
+        <span class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-extrabold text-xs">CBT</span>
+        <div>
+          <span class="font-extrabold text-sm sm:text-base tracking-tight block leading-none">ExamPrep CBT Pro</span>
+          <span class="text-[10px] text-slate-400">Subject & Chapter Mock Studio</span>
+        </div>
+      </button>
+
+      <div class="flex items-center gap-2">
+        <button type="button" id="installPwaBtn" onclick="installPwa()" class="hidden px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">
+          Install
+        </button>
+        <button type="button" onclick="shareOverallProgressWhatsApp()" class="btn-wa px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"/></svg>
+          <span>Report</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast Notification -->
+  <div id="toastBox" class="hidden fixed top-16 inset-x-0 z-50 px-4 pointer-events-none">
+    <div id="toastInner" class="max-w-md mx-auto rounded-xl px-4 py-2.5 text-xs font-semibold shadow-lg border bg-slate-900 text-white border-slate-700 text-center"></div>
+  </div>
+
+  <!-- ==================== VIEW 1: HOME (SUBJECTS, CHAPTERS & UPLOAD) ==================== -->
+  <main id="view-home" class="max-w-5xl w-full mx-auto px-4 py-4 space-y-4 flex-1">
+
+    <!-- Resume Active Exam Banner -->
+    <div id="resumeExamBanner" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-sm">
+      <div>
+        <div class="text-xs font-extrabold text-amber-900">Active Test In Progress</div>
+        <div id="resumeExamMeta" class="text-[11px] text-amber-800 mt-0.5"></div>
+      </div>
+      <button type="button" onclick="resumePausedExam()" class="tap-btn px-4 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold shrink-0">
+        Resume Test
+      </button>
+    </div>
+
+    <!-- Subject Selector Pills -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">1. Select Subject</span>
+        <span id="activeSubjectBadge" class="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">English</span>
+      </div>
+      <div id="subjectTabsBar" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+    </section>
+
+    <!-- Dynamic Chapter Entry & Selector Card -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-sm space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">2. Dynamic Chapters (<span id="chapSubjectLabel">English</span>)</span>
+        <span class="text-[11px] text-slate-500">Add custom chapters anytime</span>
+      </div>
+
+      <!-- Add New Chapter Input -->
+      <div class="flex gap-2">
+        <input type="text" id="newChapterInput" placeholder="Enter new chapter name (e.g., Error Spotting, Trigonometry...)" class="flex-1 tap-btn px-3 py-1.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:border-blue-500" onkeydown="if(event.key==='Enter'){event.preventDefault(); addDynamicChapter();}" />
+        <button type="button" onclick="addDynamicChapter()" class="tap-btn px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shrink-0">
+          + Add Chapter
+        </button>
+      </div>
+
+      <!-- Chapter Chips List -->
+      <div id="chapterChipsWrap" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1"></div>
+    </section>
+
+    <!-- Upload Question Paper & Test Creator Card -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div>
+          <h2 class="text-sm sm:text-base font-extrabold text-slate-900">3. Upload Question Paper</h2>
+          <p class="text-[11px] text-slate-500">Target: <strong id="uploadTargetLabel" class="text-slate-800">English → All Chapters</strong></p>
+        </div>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <button type="button" onclick="downloadSamplePdf()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs">
+            Sample PDF
+          </button>
+          <button type="button" onclick="downloadSampleTxt()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs">
+            Sample TXT
+          </button>
+          <button type="button" onclick="loadSubjectDemoTest()" class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs">
+            Load Subject Demo
+          </button>
+        </div>
+      </div>
+
+      <!-- File Picker -->
+      <div id="dropZoneBox" onclick="document.getElementById('pdfFileInput').click()" class="border-2 border-dashed border-blue-300 bg-blue-50/60 hover:bg-blue-50 rounded-xl p-4 text-center cursor-pointer transition mb-3">
+        <p class="text-sm font-bold text-blue-900" id="uploadDropLabel">Tap to Select PDF or TXT File</p>
+        <p class="text-[11px] text-blue-700 mt-0.5" id="uploadSubLabel">Supports (A) (B) (C) (D) or A. B. C. D. formats + Answer Key</p>
+        <input type="file" id="pdfFileInput" accept="application/pdf,.pdf,text/plain,.txt" class="hidden" onchange="handleFileSelected(event)" />
+      </div>
+
+      <!-- Loaded Draft Preview Strip (Shown only when a new file is parsed) -->
+      <div id="draftStatusStrip" class="hidden mb-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-2">
+        <div class="text-xs text-emerald-950">
+          <strong id="draftReadyTitle">File Parsed Successfully</strong>
+          <span id="draftReadyCount" class="ml-1.5 px-2 py-0.5 rounded bg-emerald-200/80 font-bold text-[11px]"></span>
+        </div>
+        <button type="button" onclick="clearDraftUpload()" class="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 text-emerald-900 font-bold text-[11px]">
+          Clear File
+        </button>
+      </div>
+
+      <!-- Test Config Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+        <input type="text" id="cfgTitle" placeholder="Test Title (auto-filled from file)" class="sm:col-span-4 tap-btn px-3 py-2 text-sm rounded-xl border border-slate-300" />
+        <select id="cfgChapterSelect" class="sm:col-span-3 tap-btn px-3 py-2 text-sm rounded-xl border border-slate-300 bg-white"></select>
+        <input type="date" id="cfgDate" class="sm:col-span-2 tap-btn px-2.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300" />
+        <div class="sm:col-span-1 relative">
+          <input type="number" id="cfgMinutes" value="30" min="1" max="300" class="tap-btn w-full px-2.5 py-2 text-sm rounded-xl border border-slate-300" title="Duration in minutes" />
+        </div>
+        <button type="button" onclick="createAndLaunchFromForm()" class="sm:col-span-2 tap-btn rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm">
+          Create & Start
+        </button>
+      </div>
+    </section>
+
+    <!-- Filter & Local Storage Backup Strip -->
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <select id="filterSubjectSelect" onchange="renderTestLibrary()" class="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-300 bg-white">
+          <option value="ALL">All Subjects</option>
+          <option value="English">English</option>
+          <option value="Maths">Maths</option>
+          <option value="Reasoning">Reasoning</option>
+          <option value="General Studies">General Studies</option>
+        </select>
+        <input type="date" id="dateFilter" onchange="renderTestLibrary()" class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white" />
+        <button type="button" onclick="resetLibraryFilters()" class="px-2.5 py-1.5 text-xs font-semibold rounded-xl border border-slate-300 bg-white">
+          Reset
+        </button>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button type="button" onclick="exportBackupJson()" class="px-2.5 py-1.5 text-xs font-semibold rounded-xl border border-slate-300 bg-white">Backup JSON</button>
+        <button type="button" onclick="document.getElementById('restoreJsonInput').click()" class="px-2.5 py-1.5 text-xs font-semibold rounded-xl border border-slate-300 bg-white">Restore</button>
+        <input type="file" id="restoreJsonInput" accept="application/json,.json" class="hidden" onchange="importBackupJson(event)" />
+      </div>
+    </div>
+
+    <!-- Saved Tests Library -->
+    <section id="testLibraryList" class="space-y-3"></section>
+  </main>
+
+  <!-- ==================== VIEW 2: PRE-TEST TIMER SETUP ==================== -->
+  <section id="view-setup" class="hidden max-w-md w-full mx-auto px-4 py-8 flex-1">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+      <div>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span id="setupSubject" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full"></span>
+          <span id="setupChapter" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full"></span>
+          <span id="setupDate" class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full"></span>
+        </div>
+        <h2 id="setupTitle" class="text-lg font-extrabold text-slate-900 mt-2.5"></h2>
+        <p id="setupMeta" class="text-xs text-slate-500 mt-0.5"></p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1.5">Exam Duration (Minutes)</label>
+        <div class="flex items-center gap-2">
+          <input type="number" id="setupTimerInput" min="1" max="300" class="tap-btn w-24 px-3 py-2 text-base font-extrabold rounded-xl border border-slate-300" />
+          <button type="button" onclick="document.getElementById('setupTimerInput').value=15" class="tap-btn px-3 py-2 text-xs font-bold rounded-xl bg-slate-100">15m</button>
+          <button type="button" onclick="document.getElementById('setupTimerInput').value=30" class="tap-btn px-3 py-2 text-xs font-bold rounded-xl bg-slate-100">30m</button>
+          <button type="button" onclick="document.getElementById('setupTimerInput').value=50" class="tap-btn px-3 py-2 text-xs font-bold rounded-xl bg-slate-100">50m</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 pt-2">
+        <button type="button" onclick="navigateApp('home')" class="tap-btn rounded-xl border border-slate-300 text-slate-700 font-bold text-sm">
+          Back
+        </button>
+        <button type="button" onclick="beginLiveTest()" class="tap-btn rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm">
+          Start Test
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== VIEW 3: LIVE CBT TEST ==================== -->
+  <section id="view-exam" class="hidden max-w-5xl w-full mx-auto px-4 py-3 flex-1 flex flex-col">
+
+    <!-- Top Live Timers Bar -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-3 mb-3 shadow-sm flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span id="examQCounter" class="text-xs sm:text-sm font-extrabold text-slate-900">Q 1 / 20</span>
+        <span id="examSubjectTag" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[11px] font-bold">English</span>
+        <span id="examChapterTag" class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-bold">General</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Per-Question Live Stopwatch -->
+        <div class="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 font-mono text-xs font-bold" title="Time spent on this question">
+          Q: <span id="perQuestionClock">00:00</span>
+        </div>
+
+        <!-- Overall Countdown Timer -->
+        <div class="px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-700 font-mono text-xs font-bold flex items-center gap-1.5" title="Remaining time">
+          <span id="overallExamClock">30:00</span>
+          <button type="button" onclick="alterLiveTimer(5)" class="px-1.5 py-0.5 bg-white border border-red-200 rounded text-[10px]">+5m</button>
+        </div>
+
+        <button type="button" onclick="openPaletteModal()" class="tap-btn px-3 py-1 rounded-lg bg-slate-900 text-white text-xs font-bold">
+          Grid
+        </button>
+        <button type="button" onclick="openSubmitModal()" class="tap-btn px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-bold">
+          Submit
+        </button>
+      </div>
+    </div>
+
+    <!-- Dynamic Section / Part Tabs (Auto-generated if test has multiple sections/parts) -->
+    <div id="examSectionTabs" class="flex items-center gap-2 overflow-x-auto no-scrollbar mb-3"></div>
+
+    <!-- Question & Options Card -->
+    <div id="questionSwipeArea" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm flex-1 flex flex-col justify-between select-none">
+      <div>
+        <div id="liveQuestionText" class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed mb-5 whitespace-pre-line"></div>
+        <div id="liveOptionsWrap" class="space-y-2.5"></div>
+      </div>
+
+      <!-- Inline Action Controls -->
+      <div class="grid grid-cols-4 gap-2 pt-5 mt-5 border-t border-slate-100">
+        <button type="button" onclick="stepQuestion(-1)" class="tap-btn rounded-xl border border-slate-300 text-slate-800 font-bold text-xs">
+          Prev
+        </button>
+        <button type="button" onclick="toggleReviewFlag()" class="tap-btn rounded-xl bg-purple-600 text-white font-bold text-xs">
+          Review
+        </button>
+        <button type="button" onclick="clearOptionChoice()" class="tap-btn rounded-xl border border-slate-300 text-slate-600 font-bold text-xs">
+          Clear
+        </button>
+        <button type="button" onclick="saveAndNextStep()" class="tap-btn rounded-xl bg-blue-600 text-white font-extrabold text-xs">
+          Next
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== VIEW 4: SUBJECT & CHAPTER ANALYTICS ==================== -->
+  <section id="view-analytics" class="hidden max-w-5xl w-full mx-auto px-4 py-5 space-y-4 flex-1">
+
+    <!-- Analytics Mode Toggle (Current Test Report vs Subject & Chapter Mastery) -->
+    <div class="grid grid-cols-2 gap-2 bg-slate-200/70 p-1 rounded-2xl">
+      <button type="button" id="anaModeTestBtn" onclick="switchAnalyticsMode('test')" class="tap-btn rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-900 shadow-sm">
+        Current Test Scorecard
+      </button>
+      <button type="button" id="anaModeMasteryBtn" onclick="switchAnalyticsMode('mastery')" class="tap-btn rounded-xl text-xs sm:text-sm font-bold text-slate-600">
+        Subject & Chapter Mastery
+      </button>
+    </div>
+
+    <!-- SUB-VIEW A: CURRENT TEST SCORECARD -->
+    <div id="analyticsTestPanel" class="space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <div class="flex items-center gap-1.5 mb-1">
+              <span id="resSubjectTag" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[11px] font-bold"></span>
+              <span id="resChapterTag" class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold"></span>
+            </div>
+            <h2 id="resTestTitle" class="text-base sm:text-lg font-extrabold text-slate-900">Report & Analytics</h2>
+            <p id="resTestMeta" class="text-xs text-slate-500"></p>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" onclick="shareCurrentScorecardWhatsApp()" class="tap-btn btn-wa px-3.5 py-2 rounded-xl font-extrabold text-xs flex items-center gap-1.5">
+              <span>Share on WhatsApp</span>
+            </button>
+            <button type="button" onclick="retakeActiveTest()" class="tap-btn px-3.5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs">
+              Retake
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div id="resKpiRow" class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center mb-4"></div>
+
+        <!-- Dynamic Section/Part Breakdown -->
+        <div id="resSectionBreakdown" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+      </div>
+
+      <!-- Review Filter Tabs -->
+      <div id="analyticsFilterBar" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar"></div>
+
+      <!-- Question-by-Question Review -->
+      <div id="resReviewCards" class="space-y-3"></div>
+    </div>
+
+    <!-- SUB-VIEW B: CUMULATIVE SUBJECT & CHAPTER MASTERY -->
+    <div id="analyticsMasteryPanel" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+        <h3 class="text-base font-extrabold text-slate-900 mb-1">Subject-Wise Performance Overview</h3>
+        <p class="text-xs text-slate-500 mb-4">Aggregated accuracy, total score, and time spent across all saved tests</p>
+        <div id="subjectMasteryGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h3 class="text-base font-extrabold text-slate-900">Chapter-Wise Breakdown</h3>
+          <select id="masterySubjectFilter" onchange="renderMasteryDashboard()" class="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-300 bg-white">
+            <option value="ALL">All Subjects</option>
+            <option value="English">English</option>
+            <option value="Maths">Maths</option>
+            <option value="Reasoning">Reasoning</option>
+            <option value="General Studies">General Studies</option>
+          </select>
+        </div>
+        <div id="chapterMasteryList" class="space-y-2.5"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PERSISTENT BOTTOM NAVIGATION TASKBAR ==================== -->
+  <nav class="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 shadow-lg" style="padding-bottom: var(--safe-bottom);">
+    <div class="max-w-5xl mx-auto grid grid-cols-4 h-16">
+      <button type="button" data-nav="home" onclick="navigateApp('home')" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-blue-600 font-bold">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="text-[11px]">Home</span>
+      </button>
+
+      <button type="button" data-nav="exam" onclick="navigateToLiveExamTab()" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-500 font-semibold">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        <span class="text-[11px]">Live Test</span>
+      </button>
+
+      <button type="button" data-nav="analytics" onclick="navigateToAnalyticsTab('test')" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-500 font-semibold">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span class="text-[11px]">Scorecard</span>
+      </button>
+
+      <button type="button" data-nav="mastery" onclick="navigateToAnalyticsTab('mastery')" class="nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-500 font-semibold">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        <span class="text-[11px]">Subjects</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Question Palette Modal -->
+  <div id="paletteModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 max-h-[82vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+        <span class="font-extrabold text-sm text-slate-900" id="paletteSummaryLabel">0 / 20 Answered</span>
+        <button type="button" onclick="closePaletteModal()" class="px-3 py-1 rounded-lg bg-slate-100 text-xs font-bold">Close</button>
+      </div>
+      <div id="paletteGridWrap" class="grid grid-cols-5 gap-2 overflow-y-auto p-1 flex-1"></div>
+    </div>
+  </div>
+
+  <!-- Submit Confirmation Modal -->
+  <div id="submitModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl">
+      <h3 class="text-base font-extrabold text-slate-900 mb-1">Submit Test?</h3>
+      <p id="submitModalText" class="text-xs text-slate-600 mb-4"></p>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="document.getElementById('submitModal').classList.add('hidden')" class="tap-btn rounded-xl border border-slate-300 text-xs font-bold">Cancel</button>
+        <button type="button" onclick="finalizeExam()" class="tap-btn rounded-xl bg-red-600 text-white text-xs font-extrabold">Submit Now</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 1. PWA MANIFEST & SERVICE WORKER ====================
+    (function setupPwa() {
+      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0f172a"/><rect x="48" y="48" width="416" height="416" rx="84" fill="#2563eb"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,sans-serif" font-weight="800" font-size="168" fill="#ffffff">CBT</text></svg>`;
+      const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+      document.getElementById('pwaIcon').href = iconUrl;
+
+      const manifest = {
+        name: 'ExamPrep CBT Pro',
+        short_name: 'ExamPrep CBT',
+        start_url: './',
+        scope: './',
+        display: 'standalone',
+        background_color: '#f8fafc',
+        theme_color: '#0f172a',
+        icons: [
+          { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+        ]
+      };
+      try {
+        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+        document.getElementById('pwaManifest').href = URL.createObjectURL(blob);
+      } catch (e) {}
+
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        const sw = `
+          const CACHE = 'examprep-cbt-pro-v1';
+          self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./']).catch(() => {}))); });
+          self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+          self.addEventListener('fetch', e => {
+            if (e.request.method !== 'GET') return;
+            e.respondWith(fetch(e.request).then(r => { const cp = r.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)).catch(() => {}); return r; }).catch(() => caches.match(e.request)));
+          });
+        `;
+        try {
+          navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw], { type: 'application/javascript' }))).catch(() => {});
+        } catch (e) {}
+      }
+    })();
+
+    let deferredInstall = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredInstall = e;
+      document.getElementById('installPwaBtn').classList.remove('hidden');
+    });
+    async function installPwa() {
+      if (!deferredInstall) return;
+      deferredInstall.prompt();
+      await deferredInstall.userChoice;
+      deferredInstall = null;
+      document.getElementById('installPwaBtn').classList.add('hidden');
+    }
+
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // ==================== 2. SUBJECTS, DYNAMIC CHAPTERS & STORAGE ====================
+    const STORE_TESTS_KEY = 'examprep_cbt_tests_v5';
+    const STORE_CHAPTERS_KEY = 'examprep_cbt_chapters_v5';
+
+    const SUBJECTS = ['English', 'Maths', 'Reasoning', 'General Studies'];
+
+    const DEFAULT_CHAPTERS = {
+      'English': ['General / Mixed', 'Grammar & Error Spotting', 'Vocabulary (Synonyms & Antonyms)', 'Idioms & Phrases', 'Reading Comprehension', 'Cloze Test'],
+      'Maths': ['General / Mixed', 'Speed Calculation', 'Percentage & Profit-Loss', 'Ratio, Mixture & Average', 'Time & Work / Speed-Distance', 'Geometry & Mensuration'],
+      'Reasoning': ['General / Mixed', 'Analogy & Classification', 'Number & Letter Series', 'Coding-Decoding', 'Syllogism & Blood Relations', 'Seating & Direction'],
+      'General Studies': ['General / Mixed', 'History & Culture', 'Indian Polity', 'Geography', 'General Science', 'Current Affairs & Static GK']
+    };
+
+    const SUBJECT_DEMO_BANKS = {
+      'English': [
+        { num: 1, section: 'Grammar', question: 'Identify the segment with a grammatical error: "Neither of the two brothers have submitted their assignment yet."', options: { A: 'Neither of the', B: 'two brothers', C: 'have submitted', D: 'their assignment yet' }, answer: 'C', shortcut: '"Neither of" takes a singular verb → "has submitted".' },
+        { num: 2, section: 'Grammar', question: 'Select the most appropriate option to fill in the blank: "Scarcely had he reached the station _____ the train departed."', options: { A: 'than', B: 'when', C: 'then', D: 'while' }, answer: 'B', shortcut: 'Correlative conjunction pair: "Scarcely / Hardly ... when".' },
+        { num: 3, section: 'Vocabulary', question: 'Select the most appropriate SYNONYM of the given word: EPHEMERAL', options: { A: 'Eternal', B: 'Transitory', C: 'Stubborn', D: 'Abundant' }, answer: 'B', shortcut: 'Ephemeral = lasting for a very short time (Transitory).' },
+        { num: 4, section: 'Vocabulary', question: 'Select the most appropriate ANTONYM of the given word: MITIGATE', options: { A: 'Alleviate', B: 'Aggravate', C: 'Pacify', D: 'Diminish' }, answer: 'B', shortcut: 'Mitigate = reduce severity; opposite is Aggravate (worsen).' },
+        { num: 5, section: 'Idioms', question: 'Select the meaning of the idiom: "To burn the midnight oil"', options: { A: 'To waste resources', B: 'To work or study late into the night', C: 'To start a quarrel', D: 'To panic unnecessarily' }, answer: 'B', shortcut: 'Refers to studying/working late at night.' },
+        { num: 6, section: 'One-Word', question: 'One who knows everything is called:', options: { A: 'Omnipotent', B: 'Omnipresent', C: 'Omniscient', D: 'Optimist' }, answer: 'C', shortcut: 'Omni (all) + scient (knowing) = Omniscient.' }
+      ],
+      'Maths': [
+        { num: 1, section: 'Part 1: Calculation', question: '485 + 379 + 616 = ?', options: { A: '1,470', B: '1,480', C: '1,490', D: '1,580' }, answer: 'B', shortcut: 'Pair 485 + 616 = 1,101 first, then + 379 = 1,480.' },
+        { num: 2, section: 'Part 1: Calculation', question: '64 × 25 = ?', options: { A: '1,500', B: '1,650', C: '1,600', D: '1,400' }, answer: 'C', shortcut: '× 25 = ÷ 4 × 100 → (64 / 4) × 100 = 1,600.' },
+        { num: 3, section: 'Part 1: Calculation', question: '37.5% of 400 = ?', options: { A: '125', B: '140', C: '150', D: '160' }, answer: 'C', shortcut: '37.5% = 3/8 → (3/8) × 400 = 150.' },
+        { num: 4, section: 'Part 2: Arithmetic', question: 'A number is first increased by 20% and then decreased by 20%. What is the net percentage change?', options: { A: 'No change', B: '4% increase', C: '4% decrease', D: '2% decrease' }, answer: 'C', shortcut: 'Equal ±x% gives net loss of (x²/100)% = 4% decrease.' },
+        { num: 5, section: 'Part 2: Arithmetic', question: 'If the selling price of 12 pens equals the cost price of 15 pens, find the profit percentage.', options: { A: '20%', B: '25%', C: '30%', D: '15%' }, answer: 'B', shortcut: '((15 − 12) / 12) × 100 = 25%.' },
+        { num: 6, section: 'Part 2: Arithmetic', question: 'A can complete a work in 12 days and B in 18 days. How many days will they take working together?', options: { A: '6.5 days', B: '7.2 days', C: '7.5 days', D: '8 days' }, answer: 'B', shortcut: '(12 × 18) / (12 + 18) = 216 / 30 = 7.2 days.' }
+      ],
+      'Reasoning': [
+        { num: 1, section: 'Series', question: 'Find the next number in the series: 7, 15, 31, 63, ?', options: { A: '125', B: '127', C: '129', D: '131' }, answer: 'B', shortcut: 'Pattern: ×2 + 1 → 63 × 2 + 1 = 127.' },
+        { num: 2, section: 'Coding', question: 'If FLOWER is coded as EKNVDQ, how is GARDEN coded in the same language?', options: { A: 'FZQCDM', B: 'HBSDFO', C: 'FZQCEM', D: 'EZQCDM' }, answer: 'A', shortcut: 'Each letter shifts −1: G→F, A→Z, R→Q, D→C, E→D, N→M.' },
+        { num: 3, section: 'Analogy', question: 'Doctor : Hospital :: Teacher : ?', options: { A: 'Student', B: 'School', C: 'Book', D: 'Chalk' }, answer: 'B', shortcut: 'Worker and workplace relationship.' },
+        { num: 4, section: 'Direction', question: 'Rahul walks 10 m North, turns right and walks 15 m, then turns right and walks 10 m. How far and in which direction is he from the start?', options: { A: '15 m West', B: '15 m East', C: '25 m East', D: '10 m South' }, answer: 'B', shortcut: 'North 10 m and South 10 m cancel out; 15 m East remains.' },
+        { num: 5, section: 'Odd One Out', question: 'Find the odd word out:', options: { A: 'Square', B: 'Triangle', C: 'Rectangle', D: 'Cylinder' }, answer: 'D', shortcut: 'Cylinder is a 3D solid; others are 2D plane figures.' },
+        { num: 6, section: 'Blood Relations', question: 'Pointing to a photograph, Amit said, "He is the son of the only daughter of my father." How is the person in the photo related to Amit?', options: { A: 'Brother', B: 'Nephew', C: 'Cousin', D: 'Son' }, answer: 'B', shortcut: 'Only daughter of Amit’s father = Amit’s sister; her son = Nephew.' }
+      ],
+      'General Studies': [
+        { num: 1, section: 'Polity', question: 'Which Article of the Indian Constitution abolishes "Untouchability"?', options: { A: 'Article 15', B: 'Article 16', C: 'Article 17', D: 'Article 18' }, answer: 'C', shortcut: 'Article 17 abolishes untouchability and forbids its practice.' },
+        { num: 2, section: 'Science', question: 'Which vitamin is synthesized in human skin upon exposure to sunlight?', options: { A: 'Vitamin A', B: 'Vitamin B12', C: 'Vitamin C', D: 'Vitamin D' }, answer: 'D', shortcut: 'UV-B rays convert 7-dehydrocholesterol into Vitamin D3.' },
+        { num: 3, section: 'Geography', question: 'Which is the longest peninsular river in India?', options: { A: 'Krishna', B: 'Godavari', C: 'Narmada', D: 'Mahanadi' }, answer: 'B', shortcut: 'Godavari (1,465 km) is known as Dakshin Ganga.' },
+        { num: 4, section: 'History', question: 'Who founded the "Brahmo Samaj" in 1828?', options: { A: 'Swami Vivekananda', B: 'Raja Ram Mohan Roy', C: 'Dayananda Saraswati', D: 'Ishwar Chandra Vidyasagar' }, answer: 'B', shortcut: 'Founded by Raja Ram Mohan Roy in Calcutta in 1828.' },
+        { num: 5, section: 'Economy', question: 'Which institution acts as the "Lender of Last Resort" in India?', options: { A: 'SBI', B: 'SEBI', C: 'RBI', D: 'NABARD' }, answer: 'C', shortcut: 'Reserve Bank of India (RBI) is the central bank and lender of last resort.' },
+        { num: 6, section: 'Static GK', question: 'The Kaziranga National Park is famous for which endangered species?', options: { A: 'Asiatic Lion', B: 'One-horned Rhinoceros', C: 'Snow Leopard', D: 'Royal Bengal Tiger' }, answer: 'B', shortcut: 'Kaziranga (Assam) hosts the world’s largest population of Indian one-horned rhinos.' }
+      ]
+    };
+
+    let selectedSubject = 'English';
+    let selectedChapter = 'General / Mixed';
+    let draftQuestions = [];
+    let draftFileName = '';
+    let activeTest = null;
+    let examInProgress = false;
+    let currentIdx = 0;
+    let answersMap = {};
+    let statusMap = {};
+    let questionTimeSpent = {};
+    let mainTimerInterval = null;
+    let totalRemainingSec = 0;
+    let totalAllocatedSec = 0;
+    let latestAttempt = null;
+    let reviewTabFilter = 'all';
+
+    function todayISO() {
+      const d = new Date();
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    }
+    document.getElementById('cfgDate').value = todayISO();
+
+    function toast(msg) {
+      const box = document.getElementById('toastBox');
+      document.getElementById('toastInner').textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(box._t);
+      box._t = setTimeout(() => box.classList.add('hidden'), 2800);
+    }
+
+    function getChaptersMap() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORE_CHAPTERS_KEY) || 'null');
+        if (saved && typeof saved === 'object') {
+          SUBJECTS.forEach(s => {
+            if (!Array.isArray(saved[s]) || saved[s].length === 0) {
+              saved[s] = [...DEFAULT_CHAPTERS[s]];
+            }
+          });
+          return saved;
+        }
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_CHAPTERS));
+    }
+
+    function saveChaptersMap(map) {
+      localStorage.setItem(STORE_CHAPTERS_KEY, JSON.stringify(map));
+    }
+
+    function getTests() {
+      try {
+        const d = JSON.parse(localStorage.getItem(STORE_TESTS_KEY) || '[]');
+        return Array.isArray(d) ? d : [];
+      } catch (e) { return []; }
+    }
+
+    function saveTests(list) {
+      try {
+        localStorage.setItem(STORE_TESTS_KEY, JSON.stringify(list));
+      } catch (e) {
+        toast('Storage full! Export JSON backup.');
+      }
+    }
+
+    // ==================== 3. SUBJECT & DYNAMIC CHAPTER UI ====================
+    function renderSubjectAndChapterUI() {
+      // Render Subject Tabs
+      document.getElementById('subjectTabsBar').innerHTML = SUBJECTS.map(subj => {
+        const active = subj === selectedSubject;
+        return `
+          <button
+            type="button"
+            onclick="selectSubject('${subj}')"
+            class="tap-btn px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold border transition ${
+              active ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+            }"
+          >${subj}</button>
+        `;
+      }).join('');
+
+      document.getElementById('activeSubjectBadge').textContent = selectedSubject;
+      document.getElementById('chapSubjectLabel').textContent = selectedSubject;
+
+      const chapMap = getChaptersMap();
+      const chapters = chapMap[selectedSubject] || ['General / Mixed'];
+      if (!chapters.includes(selectedChapter)) {
+        selectedChapter = chapters[0];
+      }
+
+      // Render Chapter Chips with Delete Option for Custom Chapters
+      document.getElementById('chapterChipsWrap').innerHTML = chapters.map(ch => {
+        const active = ch === selectedChapter;
+        const isDefault = (DEFAULT_CHAPTERS[selectedSubject] || []).includes(ch);
+        return `
+          <div class="inline-flex items-center rounded-xl border shrink-0 transition ${
+            active ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+          }">
+            <button type="button" onclick="selectChapter('${escAttr(ch)}')" class="px-3 py-1.5 text-xs font-bold">
+              ${esc(ch)}
+            </button>
+            ${!isDefault ? `<button type="button" onclick="deleteDynamicChapter('${escAttr(ch)}')" class="pr-2.5 pl-1 py-1.5 text-[11px] opacity-75 hover:opacity-100" title="Remove chapter">✕</button>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      // Sync Config Dropdown
+      const sel = document.getElementById('cfgChapterSelect');
+      sel.innerHTML = chapters.map(ch => `<option value="${escAttr(ch)}" ${ch === selectedChapter ? 'selected' : ''}>${esc(ch)}</option>`).join('');
+      sel.onchange = () => {
+        selectedChapter = sel.value;
+        renderSubjectAndChapterUI();
+      };
+
+      document.getElementById('uploadTargetLabel').textContent = `${selectedSubject} → ${selectedChapter}`;
+    }
+
+    function selectSubject(subj) {
+      selectedSubject = subj;
+      const chapters = getChaptersMap()[subj] || ['General / Mixed'];
+      selectedChapter = chapters[0];
+      renderSubjectAndChapterUI();
+    }
+
+    function selectChapter(ch) {
+      selectedChapter = ch;
+      renderSubjectAndChapterUI();
+    }
+
+    function addDynamicChapter() {
+      const inp = document.getElementById('newChapterInput');
+      const name = inp.value.trim();
+      if (!name) return;
+
+      const map = getChaptersMap();
+      const list = map[selectedSubject] || [];
+      if (list.some(c => c.toLowerCase() === name.toLowerCase())) {
+        toast('Chapter already exists in ' + selectedSubject);
+        selectedChapter = list.find(c => c.toLowerCase() === name.toLowerCase());
+        inp.value = '';
+        renderSubjectAndChapterUI();
+        return;
+      }
+
+      list.push(name);
+      map[selectedSubject] = list;
+      saveChaptersMap(map);
+      selectedChapter = name;
+      inp.value = '';
+      renderSubjectAndChapterUI();
+      toast(`Added "${name}" under ${selectedSubject}`);
+    }
+
+    function deleteDynamicChapter(ch) {
+      const map = getChaptersMap();
+      map[selectedSubject] = (map[selectedSubject] || []).filter(item => item !== ch);
+      if (map[selectedSubject].length === 0) {
+        map[selectedSubject] = ['General / Mixed'];
+      }
+      saveChaptersMap(map);
+      if (selectedChapter === ch) selectedChapter = map[selectedSubject][0];
+      renderSubjectAndChapterUI();
+      toast('Chapter removed');
+    }
+
+    // ==================== 4. BOTTOM TASKBAR & VIEW NAVIGATION ====================
+    function setBottomNavActive(tabKey) {
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        const active = btn.getAttribute('data-nav') === tabKey;
+        btn.className = active
+          ? 'nav-tab flex flex-col items-center justify-center gap-0.5 text-blue-600 font-bold'
+          : 'nav-tab flex flex-col items-center justify-center gap-0.5 text-slate-500 font-semibold';
+      });
+    }
+
+    function navigateApp(view) {
+      ['home', 'setup', 'exam', 'analytics'].forEach(v => {
+        document.getElementById('view-' + v).classList.add('hidden');
+      });
+      document.getElementById('view-' + view).classList.remove('hidden');
+
+      if (view !== 'exam' && mainTimerInterval) {
+        clearInterval(mainTimerInterval);
+        mainTimerInterval = null;
+      }
+
+      if (view === 'home') {
+        setBottomNavActive('home');
+        updateResumeBanner();
+        renderSubjectAndChapterUI();
+        renderTestLibrary();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateResumeBanner() {
+      const banner = document.getElementById('resumeExamBanner');
+      if (examInProgress && activeTest && totalRemainingSec > 0) {
+        const answered = Object.keys(answersMap).length;
+        document.getElementById('resumeExamMeta').textContent =
+          `[${activeTest.subject}] ${activeTest.title} • Q${currentIdx + 1}/${activeTest.questions.length} • ${answered} Answered • ${formatMMSS(totalRemainingSec)} left`;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function resumePausedExam() {
+      if (!examInProgress || !activeTest) return;
+      navigateApp('exam');
+      renderActiveQuestion();
+      startDualTimers();
+    }
+
+    function navigateToLiveExamTab() {
+      if (examInProgress && activeTest && totalRemainingSec > 0) {
+        resumePausedExam();
+      } else {
+        toast('Select or upload a test to start');
+      }
+    }
+
+    function navigateToAnalyticsTab(mode = 'test') {
+      const tests = getTests();
+      const withAttempt = tests.find(t => t.attempts && t.attempts.length > 0);
+      if (mode === 'mastery') {
+        if (!withAttempt) {
+          toast('Complete at least one test to view Subject & Chapter Mastery');
+          return;
+        }
+        if (!activeTest || !latestAttempt) {
+          activeTest = withAttempt;
+          latestAttempt = withAttempt.attempts[withAttempt.attempts.length - 1];
+          answersMap = { ...(latestAttempt.answers || {}) };
+          questionTimeSpent = { ...(latestAttempt.perQuestionSec || {}) };
+        }
+        renderAnalyticsView('all', 'mastery');
+        return;
+      }
+
+      if (activeTest && latestAttempt) {
+        renderAnalyticsView('all', 'test');
+      } else if (withAttempt) {
+        openAnalyticsForTest(withAttempt.id, 'all');
+      } else {
+        toast('Complete any test to view Scorecard');
+      }
+    }
+
+    // ==================== 5. SAMPLE PDF & TXT GENERATOR ====================
+    function downloadSampleTxt() {
+      const sampleTxt = [
+        `Subject: ${selectedSubject}`,
+        `Chapter: ${selectedChapter}`,
+        `Date: ${todayISO()}`,
+        '',
+        'Section: Practice Questions',
+        '1. Identify the correct option for the first sample question.',
+        '(A) First Option  (B) Second Option  (C) Third Option  (D) Fourth Option',
+        '',
+        '2. Identify the correct option for the second sample question.',
+        '(A) Alpha  (B) Beta  (C) Gamma  (D) Delta',
+        '',
+        'Answer Key & Complete Shortcuts',
+        '1 (B) Explanation or shortcut for question 1.',
+        '2 (C) Explanation or shortcut for question 2.'
+      ].join('\n');
+
+      const blob = new Blob([sampleTxt], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Sample_${selectedSubject.replace(/\s+/g, '_')}_Format.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Downloaded Sample TXT format');
+    }
+
+    function downloadSamplePdf() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        downloadSampleTxt();
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text(`${selectedSubject} — ${selectedChapter}`, 15, 18);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(`Date: ${todayISO()}`, 15, 25);
+
+      const lines = [
+        '1. Sample question one formatted with four clear choices?',
+        '(A) Option A   (B) Option B   (C) Option C   (D) Option D',
+        '',
+        '2. Sample question two formatted with four clear choices?',
+        '(A) Choice 1   (B) Choice 2   (C) Choice 3   (D) Choice 4',
+        '',
+        'Answer Key & Complete Shortcuts',
+        '1 (B) Short explanation for question 1.',
+        '2 (C) Short explanation for question 2.'
+      ];
+      let y = 35;
+      lines.forEach(line => {
+        if (line.startsWith('Answer Key')) doc.setFont('helvetica', 'bold');
+        else doc.setFont('helvetica', 'normal');
+        doc.text(line, 15, y);
+        y += 7;
+      });
+      doc.save(`Sample_${selectedSubject.replace(/\s+/g, '_')}_Format.pdf`);
+      toast('Downloaded Sample PDF format');
+    }
+
+    // ==================== 6. ROBUST FILE UPLOAD & PARSER (FIXES STALE PAPER BUG) ====================
+    function clearDraftUpload() {
+      draftQuestions = [];
+      draftFileName = '';
+      const inp = document.getElementById('pdfFileInput');
+      if (inp) inp.value = '';
+      document.getElementById('uploadDropLabel').textContent = 'Tap to Select PDF or TXT File';
+      document.getElementById('draftStatusStrip').classList.add('hidden');
+    }
+
+    async function handleFileSelected(e) {
+      const inputEl = e.target;
+      const file = inputEl.files && inputEl.files[0];
+      if (!file) return;
+
+      // Immediately clear previous draft state so old question paper NEVER leaks into new upload
+      draftQuestions = [];
+      draftFileName = file.name;
+      document.getElementById('draftStatusStrip').classList.add('hidden');
+      document.getElementById('uploadDropLabel').textContent = `Reading new file: ${file.name}...`;
+
+      try {
+        let fullText = '';
+        if (file.name.toLowerCase().endsWith('.txt') || file.type === 'text/plain') {
+          fullText = await file.text();
+        } else {
+          if (!window.pdfjsLib) throw new Error('PDF reader library still loading. Try again.');
+          const buf = await file.arrayBuffer();
+          // Disable worker cache reuse by passing fresh Uint8Array copy
+          const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buf) });
+          const pdf = await loadingTask.promise;
+
+          for (let p = 1; p <= pdf.numPages; p++) {
+            const page = await pdf.getPage(p);
+            const tc = await page.getTextContent();
+            let lastY = null;
+            const out = [];
+            tc.items.forEach(it => {
+              const y = it.transform ? it.transform[5] : null;
+              if (lastY !== null && y !== null && Math.abs(y - lastY) > 4.5) out.push('\n');
+              out.push(it.str);
+              if (y !== null) lastY = y;
+            });
+            fullText += out.join(' ') + '\n';
+          }
+          await pdf.destroy();
+        }
+
+        // Always update Title to reflect the newly uploaded file
+        const cleanTitle = file.name.replace(/\.(pdf|txt)$/i, '').replace(/[_-]+/g, ' ').trim();
+        document.getElementById('cfgTitle').value = cleanTitle;
+
+        const dateMatch = fullText.match(/\b(\d{4}-\d{2}-\d{2}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4})\b/i);
+        if (dateMatch) {
+          const d = new Date(dateMatch[0]);
+          if (!Number.isNaN(d.getTime())) {
+            document.getElementById('cfgDate').value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+          }
+        }
+
+        const parsed = parseExamPdfText(fullText);
+        if (parsed.length > 0) {
+          draftQuestions = parsed;
+          document.getElementById('uploadDropLabel').textContent = `Loaded: ${file.name} (${parsed.length} Qs)`;
+          document.getElementById('draftReadyTitle').textContent = file.name;
+          document.getElementById('draftReadyCount').textContent = `${parsed.length} Questions Ready`;
+          document.getElementById('draftStatusStrip').classList.remove('hidden');
+          toast(`Parsed ${parsed.length} new questions from ${file.name}`);
+        } else {
+          draftQuestions = [];
+          document.getElementById('uploadDropLabel').textContent = `No MCQs found in ${file.name} — check format`;
+          toast('No numbered MCQs detected in uploaded file');
+        }
+      } catch (err) {
+        draftQuestions = [];
+        document.getElementById('uploadDropLabel').textContent = 'Tap to Select PDF or TXT File';
+        toast('Error reading file: ' + err.message);
+      } finally {
+        // Reset input value so selecting the same or another file always fires onchange cleanly
+        inputEl.value = '';
+      }
+    }
+
+    function parseExamPdfText(text) {
+      const clean = text.replace(/\r\n/g, '\n').replace(/[ \t]+/g, ' ').replace(/\n\s+/g, '\n');
+      const parts = clean.split(/Answer\s*Key/i);
+      const qBody = parts[0] || clean;
+      const ansBody = parts.slice(1).join('\n');
+
+      const ansMap = {};
+      const ansRe = /(?:Q\s*)?(\d{1,3})\s*[\.\:\-\)]?\s*\(?([A-D])\)?/gi;
+      let am;
+      while ((am = ansRe.exec(ansBody)) !== null) {
+        ansMap[parseInt(am[1], 10)] = am[2].toUpperCase();
+      }
+
+      const scMap = {};
+      const scRe = /(?:Q\s*)?(\d{1,3})\s*\(?[A-D]\)?[^\n]*?\s+([^\n]+)/gi;
+      let sm;
+      while ((sm = scRe.exec(ansBody)) !== null) {
+        const n = parseInt(sm[1], 10);
+        if (sm[2] && sm[2].trim().length > 3) scMap[n] = sm[2].trim();
+      }
+
+      const list = [];
+      const qRe = /(?:^|\n)\s*(?:Q\s*)?(\d{1,3})[\.\)]\s+([\s\S]*?)(?=(?:\n\s*(?:Q\s*)?\d{1,3}[\.\)]\s+)|$)/g;
+      let qm;
+      while ((qm = qRe.exec(qBody)) !== null) {
+        const num = parseInt(qm[1], 10);
+        const block = qm[2].trim();
+        // Support both (A) ... (B) ... and A. ... B. ... formats
+        let optM = block.match(/\(A\)\s*([\s\S]*?)\s*\(B\)\s*([\s\S]*?)\s*\(C\)\s*([\s\S]*?)\s*\(D\)\s*([\s\S]*?)(?=\n|$)/i);
+        if (!optM) {
+          optM = block.match(/(?:^|\n|\s)A[\.\)]\s*([\s\S]*?)\s+B[\.\)]\s*([\s\S]*?)\s+C[\.\)]\s*([\s\S]*?)\s+D[\.\)]\s*([\s\S]*?)(?=\n|$)/i);
+        }
+        if (optM) {
+          const stem = block.slice(0, optM.index).trim();
+          list.push({
+            num,
+            section: num <= 25 ? 'Section A' : 'Section B',
+            question: stem,
+            options: { A: optM[1].trim(), B: optM[2].trim(), C: optM[3].trim(), D: optM[4].trim() },
+            answer: ansMap[num] || 'A',
+            shortcut: scMap[num] || ''
+          });
+        }
+      }
+      return list;
+    }
+
+    function loadSubjectDemoTest() {
+      const bank = SUBJECT_DEMO_BANKS[selectedSubject] || SUBJECT_DEMO_BANKS['English'];
+      const test = {
+        id: 'test_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        subject: selectedSubject,
+        chapter: selectedChapter,
+        title: `${selectedSubject}: ${selectedChapter} Practice`,
+        date: todayISO(),
+        durationMin: 15,
+        questions: JSON.parse(JSON.stringify(bank)),
+        attempts: []
+      };
+      const all = getTests();
+      all.unshift(test);
+      saveTests(all);
+      openSetupScreen(test.id);
+    }
+
+    function createAndLaunchFromForm() {
+      if (draftQuestions.length === 0) {
+        toast('Upload a PDF/TXT file first, or tap "Load Subject Demo"');
+        return;
+      }
+
+      const chapter = document.getElementById('cfgChapterSelect').value || selectedChapter;
+      const title = document.getElementById('cfgTitle').value.trim() || `${selectedSubject} — ${chapter}`;
+      const date = document.getElementById('cfgDate').value || todayISO();
+      const durationMin = Math.max(1, parseInt(document.getElementById('cfgMinutes').value, 10) || 30);
+
+      const test = {
+        id: 'test_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        subject: selectedSubject,
+        chapter: chapter,
+        title,
+        date,
+        durationMin,
+        questions: JSON.parse(JSON.stringify(draftQuestions)),
+        attempts: []
+      };
+
+      const all = getTests();
+      all.unshift(test);
+      saveTests(all);
+
+      // Clear draft and title immediately after saving so next upload starts 100% fresh
+      clearDraftUpload();
+      document.getElementById('cfgTitle').value = '';
+      openSetupScreen(test.id);
+    }
+
+    // ==================== 7. TEST LIBRARY RENDERING ====================
+    function resetLibraryFilters() {
+      document.getElementById('filterSubjectSelect').value = 'ALL';
+      document.getElementById('dateFilter').value = '';
+      renderTestLibrary();
+    }
+
+    function renderTestLibrary() {
+      const wrap = document.getElementById('testLibraryList');
+      const fSubj = document.getElementById('filterSubjectSelect').value;
+      const fDate = document.getElementById('dateFilter').value;
+
+      let tests = getTests();
+      if (fSubj && fSubj !== 'ALL') tests = tests.filter(t => (t.subject || 'Maths') === fSubj);
+      if (fDate) tests = tests.filter(t => t.date === fDate);
+      tests.sort((a, b) => b.id.localeCompare(a.id));
+
+      if (tests.length === 0) {
+        wrap.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-500">No saved tests found for this filter. Upload a PDF/TXT or tap "Load Subject Demo" above.</div>`;
+        return;
+      }
+
+      wrap.innerHTML = tests.map(t => {
+        const subj = t.subject || 'Maths';
+        const chap = t.chapter || 'General / Mixed';
+        const last = t.attempts && t.attempts.length ? t.attempts[t.attempts.length - 1] : null;
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                <span class="text-[11px] font-extrabold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">${esc(subj)}</span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">${esc(chap)}</span>
+                <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">${esc(t.date)} • ${t.questions.length} Qs • ${t.durationMin}m</span>
+                ${last ? `<span class="text-[11px] font-extrabold px-2 py-0.5 rounded bg-blue-100 text-blue-800">${last.score}/${last.maxScore} (${last.accuracy}%)</span>` : ''}
+              </div>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900">${esc(t.title)}</h3>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              ${last ? `<button type="button" onclick="openAnalyticsForTest('${t.id}', 'all')" class="tap-btn px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold">Report</button>` : ''}
+              <button type="button" onclick="openSetupScreen('${t.id}')" class="tap-btn px-4 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold">Start</button>
+              <button type="button" onclick="deleteSavedTest('${t.id}')" class="tap-btn px-2.5 py-1.5 rounded-xl border border-red-200 text-red-600 text-xs font-semibold">Del</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function deleteSavedTest(id) {
+      if (activeTest && activeTest.id === id) {
+        examInProgress = false;
+        activeTest = null;
+        latestAttempt = null;
+      }
+      saveTests(getTests().filter(t => t.id !== id));
+      updateResumeBanner();
+      renderTestLibrary();
+    }
+
+    // ==================== 8. PRE-TEST SETUP & LIVE CBT EXAM ====================
+    function openSetupScreen(testId) {
+      const found = getTests().find(t => t.id === testId);
+      if (!found) return;
+      activeTest = found;
+      document.getElementById('setupSubject').textContent = found.subject || 'General';
+      document.getElementById('setupChapter').textContent = found.chapter || 'General / Mixed';
+      document.getElementById('setupDate').textContent = found.date;
+      document.getElementById('setupTitle').textContent = found.title;
+      document.getElementById('setupMeta').textContent = `${found.questions.length} Questions • +2 / -0.5 Marking`;
+      document.getElementById('setupTimerInput').value = found.durationMin;
+      navigateApp('setup');
+    }
+
+    function beginLiveTest() {
+      const mins = Math.max(1, parseInt(document.getElementById('setupTimerInput').value, 10) || activeTest.durationMin);
+      totalAllocatedSec = mins * 60;
+      totalRemainingSec = totalAllocatedSec;
+
+      currentIdx = 0;
+      answersMap = {};
+      statusMap = {};
+      questionTimeSpent = {};
+      examInProgress = true;
+      latestAttempt = null;
+
+      activeTest.questions.forEach((_, i) => {
+        statusMap[i] = i === 0 ? 'not-answered' : 'not-visited';
+        questionTimeSpent[i] = 0;
+      });
+
+      navigateApp('exam');
+      setBottomNavActive('exam');
+      renderExamSectionTabs();
+      renderActiveQuestion();
+      startDualTimers();
+    }
+
+    function startDualTimers() {
+      if (mainTimerInterval) clearInterval(mainTimerInterval);
+      updateTimerDisplays();
+      mainTimerInterval = setInterval(() => {
+        totalRemainingSec--;
+        questionTimeSpent[currentIdx] = (questionTimeSpent[currentIdx] || 0) + 1;
+        updateTimerDisplays();
+
+        if (totalRemainingSec <= 0) {
+          clearInterval(mainTimerInterval);
+          mainTimerInterval = null;
+          finalizeExam();
+        }
+      }, 1000);
+    }
+
+    function alterLiveTimer(addMins) {
+      totalRemainingSec = Math.max(10, totalRemainingSec + addMins * 60);
+      if (totalRemainingSec > totalAllocatedSec) totalAllocatedSec = totalRemainingSec;
+      updateTimerDisplays();
+    }
+
+    function formatMMSS(sec) {
+      const s = Math.max(0, sec);
+      return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    }
+
+    function updateTimerDisplays() {
+      document.getElementById('overallExamClock').textContent = formatMMSS(totalRemainingSec);
+      document.getElementById('perQuestionClock').textContent = formatMMSS(questionTimeSpent[currentIdx] || 0);
+    }
+
+    function getUniqueSections(questions) {
+      const secs = [];
+      questions.forEach(q => {
+        const s = q.section || q.part || 'All Questions';
+        if (!secs.includes(s)) secs.push(s);
+      });
+      return secs;
+    }
+
+    function renderExamSectionTabs() {
+      const bar = document.getElementById('examSectionTabs');
+      const secs = getUniqueSections(activeTest.questions);
+      if (secs.length <= 1) {
+        bar.innerHTML = '';
+        return;
+      }
+      const curSec = activeTest.questions[currentIdx]?.section || activeTest.questions[currentIdx]?.part || secs[0];
+      bar.innerHTML = secs.map(sec => {
+        const active = sec === curSec;
+        return `
+          <button type="button" onclick="jumpToSection('${escAttr(sec)}')" class="tap-btn px-4 py-1.5 rounded-xl text-xs font-bold shrink-0 transition ${
+            active ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-700'
+          }">${esc(sec)}</button>
+        `;
+      }).join('');
+    }
+
+    function jumpToSection(secName) {
+      const idx = activeTest.questions.findIndex(q => (q.section || q.part || 'All Questions') === secName);
+      if (idx !== -1) {
+        currentIdx = idx;
+        renderActiveQuestion();
+      }
+    }
+
+    function renderActiveQuestion() {
+      const q = activeTest.questions[currentIdx];
+      if (!q) return;
+      if (statusMap[currentIdx] === 'not-visited') {
+        statusMap[currentIdx] = 'not-answered';
+      }
+
+      document.getElementById('examQCounter').textContent = `Q ${currentIdx + 1} / ${activeTest.questions.length}`;
+      document.getElementById('examSubjectTag').textContent = activeTest.subject || 'Subject';
+      document.getElementById('examChapterTag').textContent = activeTest.chapter || 'Chapter';
+      document.getElementById('liveQuestionText').textContent = `${q.num}. ${q.question}`;
+      renderExamSectionTabs();
+      updateTimerDisplays();
+
+      const chosen = answersMap[currentIdx];
+      document.getElementById('liveOptionsWrap').innerHTML = ['A', 'B', 'C', 'D'].map(letter => {
+        const active = chosen === letter;
+        return `
+          <button
+            type="button"
+            onclick="selectAnswerOption('${letter}')"
+            class="tap-btn w-full text-left flex items-center gap-3 p-3.5 rounded-xl border-2 transition ${
+              active ? 'border-blue-600 bg-blue-50 text-slate-950 font-semibold' : 'border-slate-200 bg-white text-slate-800 hover:border-blue-300'
+            }"
+          >
+            <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 border ${
+              active ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 text-slate-700'
+            }">${letter}</span>
+            <span class="text-sm sm:text-base">${esc(q.options[letter])}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectAnswerOption(letter) {
+      if (answersMap[currentIdx] === letter) {
+        delete answersMap[currentIdx];
+        statusMap[currentIdx] = statusMap[currentIdx] === 'marked-answered' ? 'marked' : 'not-answered';
+      } else {
+        answersMap[currentIdx] = letter;
+        statusMap[currentIdx] = (statusMap[currentIdx] === 'marked' || statusMap[currentIdx] === 'marked-answered')
+          ? 'marked-answered' : 'answered';
+      }
+      renderActiveQuestion();
+    }
+
+    function clearOptionChoice() {
+      delete answersMap[currentIdx];
+      statusMap[currentIdx] = statusMap[currentIdx] === 'marked-answered' ? 'marked' : 'not-answered';
+      renderActiveQuestion();
+    }
+
+    function toggleReviewFlag() {
+      statusMap[currentIdx] = answersMap[currentIdx] ? 'marked-answered' : 'marked';
+      if (currentIdx < activeTest.questions.length - 1) currentIdx++;
+      renderActiveQuestion();
+    }
+
+    function saveAndNextStep() {
+      statusMap[currentIdx] = answersMap[currentIdx] ? 'answered' : 'not-answered';
+      if (currentIdx < activeTest.questions.length - 1) {
+        currentIdx++;
+        renderActiveQuestion();
+      } else {
+        renderActiveQuestion();
+        toast('You are on the last question');
+      }
+    }
+
+    function stepQuestion(delta) {
+      const next = currentIdx + delta;
+      if (next >= 0 && next < activeTest.questions.length) {
+        currentIdx = next;
+        renderActiveQuestion();
+      }
+    }
+
+    function openPaletteModal() {
+      const answered = Object.keys(answersMap).length;
+      document.getElementById('paletteSummaryLabel').textContent = `${answered} / ${activeTest.questions.length} Answered`;
+      document.getElementById('paletteGridWrap').innerHTML = activeTest.questions.map((q, i) => {
+        const st = statusMap[i] || 'not-visited';
+        const cur = i === currentIdx ? 'pal-current' : '';
+        return `<button type="button" onclick="currentIdx=${i}; closePaletteModal(); renderActiveQuestion();" class="tap-btn pal-${st} ${cur} rounded-xl text-xs font-extrabold">${q.num}</button>`;
+      }).join('');
+      document.getElementById('paletteModal').classList.remove('hidden');
+    }
+
+    function closePaletteModal() {
+      document.getElementById('paletteModal').classList.add('hidden');
+    }
+
+    // Touch Swipe Support
+    (function bindSwipe() {
+      const area = document.getElementById('questionSwipeArea');
+      let sx = 0, sy = 0;
+      area.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }
+      }, { passive: true });
+      area.addEventListener('touchend', e => {
+        if (e.changedTouches.length === 1) {
+          const dx = e.changedTouches[0].clientX - sx;
+          const dy = e.changedTouches[0].clientY - sy;
+          if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.4) stepQuestion(dx < 0 ? 1 : -1);
+        }
+      }, { passive: true });
+    })();
+
+    // ==================== 9. SUBMISSION & DUAL ANALYTICS (TEST + SUBJECT/CHAPTER MASTERY) ====================
+    function openSubmitModal() {
+      const ans = Object.keys(answersMap).length;
+      document.getElementById('submitModalText').textContent = `Answered: ${ans} | Skipped: ${activeTest.questions.length - ans}`;
+      document.getElementById('submitModal').classList.remove('hidden');
+    }
+
+    function finalizeExam() {
+      document.getElementById('submitModal').classList.add('hidden');
+      if (mainTimerInterval) {
+        clearInterval(mainTimerInterval);
+        mainTimerInterval = null;
+      }
+      examInProgress = false;
+
+      const timeTaken = Math.max(1, totalAllocatedSec - Math.max(0, totalRemainingSec));
+      let correct = 0, incorrect = 0, unattempted = 0;
+      activeTest.questions.forEach((q, i) => {
+        const a = answersMap[i];
+        if (!a) unattempted++;
+        else if (a === q.answer) correct++;
+        else incorrect++;
+      });
+
+      const score = Number((correct * 2 - incorrect * 0.5).toFixed(2));
+      const maxScore = activeTest.questions.length * 2;
+      const accuracy = (correct + incorrect) > 0 ? Math.round((correct / (correct + incorrect)) * 100) : 0;
+
+      const attempt = {
+        id: 'att_' + Date.now(),
+        score,
+        maxScore,
+        correct,
+        incorrect,
+        unattempted,
+        accuracy,
+        timeTaken,
+        answers: { ...answersMap },
+        perQuestionSec: { ...questionTimeSpent }
+      };
+
+      const tests = getTests();
+      const idx = tests.findIndex(t => t.id === activeTest.id);
+      if (idx !== -1) {
+        tests[idx].attempts = tests[idx].attempts || [];
+        tests[idx].attempts.push(attempt);
+        saveTests(tests);
+        activeTest = tests[idx];
+      }
+
+      latestAttempt = attempt;
+      renderAnalyticsView('all', 'test');
+    }
+
+    function openAnalyticsForTest(testId, initialTab = 'all') {
+      const t = getTests().find(x => x.id === testId);
+      if (!t || !t.attempts || !t.attempts.length) return;
+      activeTest = t;
+      latestAttempt = t.attempts[t.attempts.length - 1];
+      answersMap = { ...(latestAttempt.answers || {}) };
+      questionTimeSpent = { ...(latestAttempt.perQuestionSec || {}) };
+      renderAnalyticsView(initialTab, 'test');
+    }
+
+    function retakeActiveTest() {
+      if (activeTest) openSetupScreen(activeTest.id);
+    }
+
+    function switchAnalyticsMode(mode) {
+      const isTest = mode === 'test';
+      document.getElementById('analyticsTestPanel').classList.toggle('hidden', !isTest);
+      document.getElementById('analyticsMasteryPanel').classList.toggle('hidden', isTest);
+
+      document.getElementById('anaModeTestBtn').className = isTest
+        ? 'tap-btn rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-900 shadow-sm'
+        : 'tap-btn rounded-xl text-xs sm:text-sm font-bold text-slate-600';
+      document.getElementById('anaModeMasteryBtn').className = !isTest
+        ? 'tap-btn rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-900 shadow-sm'
+        : 'tap-btn rounded-xl text-xs sm:text-sm font-bold text-slate-600';
+
+      setBottomNavActive(isTest ? 'analytics' : 'mastery');
+      if (!isTest) renderMasteryDashboard();
+    }
+
+    function renderAnalyticsView(initialTab = 'all', mode = 'test') {
+      navigateApp('analytics');
+      switchAnalyticsMode(mode);
+
+      const totalQ = activeTest.questions.length;
+      const avgSecPerQ = Math.round(latestAttempt.timeTaken / Math.max(1, totalQ));
+
+      document.getElementById('resSubjectTag').textContent = activeTest.subject || 'Subject';
+      document.getElementById('resChapterTag').textContent = activeTest.chapter || 'General / Mixed';
+      document.getElementById('resTestTitle').textContent = activeTest.title;
+      document.getElementById('resTestMeta').textContent = `${activeTest.date} • Total Time: ${formatMMSS(latestAttempt.timeTaken)} • Avg: ${avgSecPerQ}s/Q`;
+
+      document.getElementById('resKpiRow').innerHTML = `
+        <div class="p-2.5 rounded-xl bg-blue-50 border border-blue-200"><div class="text-sm sm:text-base font-extrabold text-blue-800">${latestAttempt.score}/${latestAttempt.maxScore}</div><div class="text-[10px] font-bold text-blue-700">Score</div></div>
+        <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200"><div class="text-sm sm:text-base font-extrabold text-emerald-700">${latestAttempt.correct}</div><div class="text-[10px] font-bold text-emerald-800">Correct</div></div>
+        <div class="p-2.5 rounded-xl bg-red-50 border border-red-200"><div class="text-sm sm:text-base font-extrabold text-red-700">${latestAttempt.incorrect}</div><div class="text-[10px] font-bold text-red-800">Wrong</div></div>
+        <div class="p-2.5 rounded-xl bg-slate-100 border border-slate-200"><div class="text-sm sm:text-base font-extrabold text-slate-800">${latestAttempt.unattempted}</div><div class="text-[10px] font-bold text-slate-600">Skipped</div></div>
+        <div class="p-2.5 rounded-xl bg-purple-50 border border-purple-200"><div class="text-sm sm:text-base font-extrabold text-purple-700">${latestAttempt.accuracy}%</div><div class="text-[10px] font-bold text-purple-800">Accuracy</div></div>
+        <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200"><div class="text-sm sm:text-base font-extrabold text-amber-800">${avgSecPerQ}s</div><div class="text-[10px] font-bold text-amber-900">Avg / Q</div></div>
+      `;
+
+      // Dynamic Section Breakdown
+      const secs = getUniqueSections(activeTest.questions);
+      document.getElementById('resSectionBreakdown').innerHTML = secs.map(sec => {
+        const m = getSectionMetrics(sec);
+        return `
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+            <div><strong class="text-slate-900">${esc(sec)}</strong><div class="text-slate-500 mt-0.5">${m.correct}/${m.total} Correct • Time: ${formatMMSS(m.sec)}</div></div>
+            <span class="font-extrabold text-blue-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200">${m.acc}%</span>
+          </div>
+        `;
+      }).join('');
+
+      // Build Dynamic Filter Tabs
+      const tabs = [
+        { key: 'all', label: 'All' },
+        ...secs.map(s => ({ key: 'sec:' + s, label: s })),
+        { key: 'incorrect', label: 'Wrong' },
+        { key: 'slow', label: 'Slowest Qs' }
+      ];
+      document.getElementById('analyticsFilterBar').innerHTML = tabs.map(t => `
+        <button type="button" data-rtab="${escAttr(t.key)}" onclick="filterAnalyticsList('${escAttr(t.key)}')" class="rtab tap-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 shrink-0">${esc(t.label)}</button>
+      `).join('');
+
+      filterAnalyticsList(initialTab);
+    }
+
+    function getSectionMetrics(secName) {
+      let total = 0, correct = 0, wrong = 0, sec = 0;
+      activeTest.questions.forEach((q, i) => {
+        if ((q.section || q.part || 'All Questions') !== secName) return;
+        total++;
+        sec += (questionTimeSpent[i] || 0);
+        const a = answersMap[i];
+        if (a) { if (a === q.answer) correct++; else wrong++; }
+      });
+      const acc = (correct + wrong) > 0 ? Math.round((correct / (correct + wrong)) * 100) : 0;
+      return { total, correct, wrong, sec, acc };
+    }
+
+    function filterAnalyticsList(tabKey) {
+      reviewTabFilter = tabKey;
+      document.querySelectorAll('.rtab').forEach(b => {
+        const active = b.getAttribute('data-rtab') === tabKey;
+        b.className = active
+          ? 'rtab tap-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shrink-0'
+          : 'rtab tap-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 shrink-0';
+      });
+
+      const avgSec = Math.round(latestAttempt.timeTaken / Math.max(1, activeTest.questions.length));
+      let items = activeTest.questions.map((q, i) => {
+        const u = answersMap[i] || null;
+        const sec = questionTimeSpent[i] || 0;
+        const st = !u ? 'unattempted' : (u === q.answer ? 'correct' : 'incorrect');
+        return { q, i, u, sec, st };
+      });
+
+      if (tabKey.startsWith('sec:')) {
+        const targetSec = tabKey.slice(4);
+        items = items.filter(x => (x.q.section || x.q.part || 'All Questions') === targetSec);
+      } else if (tabKey === 'incorrect') {
+        items = items.filter(x => x.st === 'incorrect');
+      } else if (tabKey === 'slow') {
+        items = [...items].sort((a, b) => b.sec - a.sec).slice(0, 15);
+      }
+
+      const container = document.getElementById('resReviewCards');
+      if (items.length === 0) {
+        container.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-6 text-center text-xs text-slate-500">No questions in this filter.</div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(({ q, i, u, sec, st }) => {
+        const isSlow = sec > Math.max(45, avgSec * 1.4);
+        const timeBadgeClass = isSlow ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700';
+        const stBadge = st === 'correct'
+          ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">Correct</span>'
+          : st === 'incorrect'
+            ? '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-800 text-[11px] font-bold">Wrong</span>'
+            : '<span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[11px] font-bold">Skipped</span>';
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-extrabold">Q${q.num}.</span>
+                ${stBadge}
+                <span class="px-2 py-0.5 rounded-full ${timeBadgeClass} text-[11px] font-mono font-bold">Time: ${sec}s</span>
+              </div>
+              <button type="button" onclick="shareQuestionWhatsApp(${i})" class="btn-wa px-2.5 py-1 rounded-lg text-[11px] font-extrabold">
+                WhatsApp
+              </button>
+            </div>
+
+            <p class="text-sm font-semibold text-slate-900 mb-3">${esc(q.question)}</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2.5 text-xs">
+              ${['A', 'B', 'C', 'D'].map(L => {
+                let cls = 'border-slate-200 bg-white';
+                if (L === q.answer) cls = 'border-emerald-500 bg-emerald-50 text-emerald-950 font-bold';
+                else if (L === u && L !== q.answer) cls = 'border-red-500 bg-red-50 text-red-950 font-semibold';
+                return `<div class="p-2 rounded-xl border ${cls}">(${L}) ${esc(q.options[L])}</div>`;
+              }).join('')}
+            </div>
+
+            ${q.shortcut ? `<div class="bg-amber-50 border-l-4 border-amber-400 px-3 py-2 rounded-r-xl text-xs text-amber-950"><strong>Explanation:</strong> ${esc(q.shortcut)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== 10. SUBJECT & CHAPTER MASTERY AGGREGATOR ====================
+    function renderMasteryDashboard() {
+      const tests = getTests();
+      const subjStats = {};
+      SUBJECTS.forEach(s => {
+        subjStats[s] = { tests: 0, correct: 0, wrong: 0, skipped: 0, timeSec: 0 };
+      });
+
+      const chapStats = {}; // key: "Subject||Chapter"
+
+      tests.forEach(t => {
+        if (!t.attempts || t.attempts.length === 0) return;
+        const last = t.attempts[t.attempts.length - 1];
+        const subj = SUBJECTS.includes(t.subject) ? t.subject : 'Maths';
+        const chap = t.chapter || 'General / Mixed';
+
+        subjStats[subj].tests += 1;
+        subjStats[subj].correct += last.correct;
+        subjStats[subj].wrong += last.incorrect;
+        subjStats[subj].skipped += last.unattempted;
+        subjStats[subj].timeSec += last.timeTaken;
+
+        const cKey = `${subj}||${chap}`;
+        if (!chapStats[cKey]) {
+          chapStats[cKey] = { subject: subj, chapter: chap, tests: 0, correct: 0, wrong: 0, skipped: 0, timeSec: 0 };
+        }
+        chapStats[cKey].tests += 1;
+        chapStats[cKey].correct += last.correct;
+        chapStats[cKey].wrong += last.incorrect;
+        chapStats[cKey].skipped += last.unattempted;
+        chapStats[cKey].timeSec += last.timeTaken;
+      });
+
+      document.getElementById('subjectMasteryGrid').innerHTML = SUBJECTS.map(subj => {
+        const st = subjStats[subj];
+        const attempted = st.correct + st.wrong;
+        const acc = attempted > 0 ? Math.round((st.correct / attempted) * 100) : 0;
+        const barColor = acc >= 75 ? 'bg-emerald-500' : acc >= 50 ? 'bg-amber-500' : 'bg-blue-600';
+        return `
+          <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-extrabold text-sm text-slate-900">${subj}</span>
+              <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-800">${acc}% Acc</span>
+            </div>
+            <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mb-2">
+              <div class="${barColor} h-full rounded-full" style="width: ${acc}%"></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-600">
+              <span>Tests: <strong>${st.tests}</strong> • Correct: <strong class="text-emerald-700">${st.correct}</strong> • Wrong: <strong class="text-red-600">${st.wrong}</strong></span>
+              <span>Time: <strong>${formatMMSS(st.timeSec)}</strong></span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const filterSubj = document.getElementById('masterySubjectFilter').value;
+      let chapList = Object.values(chapStats);
+      if (filterSubj !== 'ALL') {
+        chapList = chapList.filter(c => c.subject === filterSubj);
+      }
+
+      const chapWrap = document.getElementById('chapterMasteryList');
+      if (chapList.length === 0) {
+        chapWrap.innerHTML = `<div class="text-xs text-slate-500 text-center py-6">No completed chapter attempts found for this subject yet.</div>`;
+        return;
+      }
+
+      chapWrap.innerHTML = chapList.map(c => {
+        const attempted = c.correct + c.wrong;
+        const acc = attempted > 0 ? Math.round((c.correct / attempted) * 100) : 0;
+        return `
+          <div class="p-3.5 rounded-xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">${esc(c.subject)}</span>
+                <span class="text-xs sm:text-sm font-bold text-slate-900">${esc(c.chapter)}</span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-1">
+                ${c.tests} Attempt(s) • Correct: ${c.correct} | Wrong: ${c.wrong} | Skipped: ${c.skipped} • Time: ${formatMMSS(c.timeSec)}
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg ${acc >= 70 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">${acc}% Accuracy</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== 11. WHATSAPP SHARING & JSON BACKUP ====================
+    function sendToWhatsApp(msg) {
+      const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      const w = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!w) window.location.href = url;
+    }
+
+    function shareCurrentScorecardWhatsApp() {
+      if (!activeTest || !latestAttempt) return;
+      const msg =
+        `*ExamPrep CBT Pro Scorecard*\n` +
+        `Subject: *${activeTest.subject}* | Chapter: *${activeTest.chapter}*\n` +
+        `Test: ${activeTest.title} (${activeTest.date})\n` +
+        `Score: *${latestAttempt.score}/${latestAttempt.maxScore}* | Accuracy: *${latestAttempt.accuracy}%*\n` +
+        `Correct: ${latestAttempt.correct} | Wrong: ${latestAttempt.incorrect} | Skipped: ${latestAttempt.unattempted}\n` +
+        `Total Time: ${formatMMSS(latestAttempt.timeTaken)}`;
+      sendToWhatsApp(msg);
+    }
+
+    function shareOverallProgressWhatsApp() {
+      const tests = getTests().filter(t => t.attempts && t.attempts.length > 0);
+      if (tests.length === 0) {
+        toast('Complete a test first to share report');
+        return;
+      }
+      const lines = tests.slice(0, 8).map((t, i) => {
+        const last = t.attempts[t.attempts.length - 1];
+        return `${i + 1}. [${t.subject} - ${t.chapter}] ${t.title}: ${last.score}/${last.maxScore} (${last.accuracy}%)`;
+      });
+      sendToWhatsApp(`*ExamPrep CBT Pro Progress Report*\n` + lines.join('\n'));
+    }
+
+    function shareQuestionWhatsApp(idx) {
+      const q = activeTest.questions[idx];
+      if (!q) return;
+      const msg =
+        `*[${activeTest.subject} • ${activeTest.chapter}] Q${q.num}.* ${q.question}\n` +
+        `(A) ${q.options.A}  (B) ${q.options.B}\n` +
+        `(C) ${q.options.C}  (D) ${q.options.D}\n` +
+        `*Ans:* (${q.answer}) ${q.options[q.answer]}\n` +
+        (q.shortcut ? `*Note:* ${q.shortcut}` : '');
+      sendToWhatsApp(msg);
+    }
+
+    function exportBackupJson() {
+      const payload = {
+        tests: getTests(),
+        chapters: getChaptersMap()
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `examprep_pro_backup_${todayISO()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Full backup exported');
+    }
+
+    function importBackupJson(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (Array.isArray(data)) {
+            saveTests(data);
+          } else if (data && Array.isArray(data.tests)) {
+            saveTests(data.tests);
+            if (data.chapters) saveChaptersMap(data.chapters);
+          } else {
+            throw new Error('Invalid JSON');
+          }
+          renderSubjectAndChapterUI();
+          renderTestLibrary();
+          toast('Backup restored successfully');
+        } catch (err) {
+          toast('Invalid backup file');
+        }
+      };
+      r.readAsText(file);
+    }
+
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escAttr(s) {
+      return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // Initialize UI
+    renderSubjectAndChapterUI();
+    renderTestLibrary();
+  </script>
+</body>
+</html>
